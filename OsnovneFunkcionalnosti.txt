@@ -1,0 +1,45 @@
+Osnovne funkcionalnosti u aplikaciji
+
+KORISNIK
+
+1.1) Registracija korisnika
+
+1.2) Prijava korisnika u bazu
+
+2.1) Pregledavanje prostora, ponuda, eventualnih paketa i osoblja
+
+2.2) Kreiranje rezervacije (tokom kreiranja može dodavati stavke kao što su muzičari, rekviziti itd. ali je bitno da se nužno odabere
+jedan prostor)
+
+3) Dodavanje stavki, uređivanje stavki u samoj rezervaciji, osnovne CRUD operacije sa vlastitim rezervacijama korisnika i njihovim stavkama
+
+4) Završetak izrade rezervacije, kreiranje plaćanja preko API od stripe-a 
+
+(glavni cilj je da stranica računa cijene svih usluga 
+te pošalje upit API-ju od Stripe davatelja usluge koji onda šalje račun korisniku koji to može platiti -> koristit ćemo test Stripe
+API u kojem se ne koristi stvarni novac već je osim pravih bankovnih kartica moguće dodavati i lažne kartice što nam je odlično za testing)
+
+5) mogućnost chata sa osobljem (nisam još dodao u bazu ali budemo ako se odlučimo na izradu chata)
+
+
+OSOBLJE -> Iznajmljivaci, dobavljaci, izvođaći muzike i ostalo osoblje
+
+1.1) registracija osoblja 
+
+1.2) prijava osoblja
+
+2) dodavanje usluge, CRUD operacije nad vlastitim profilom i ponudama
+
+3) mogućnost pregleda zarade taj mjesec
+
+4) mogućnost chata sa kupcima (nisam još dodao u bazu ali budemo ako se odlučimo na izradu chata)
+
+
+
+ADMIN
+
+1 admin
+
+mogućnost prijave i CRUD operacije nad svim entitetima u bazi odnosno na stranici
+
+

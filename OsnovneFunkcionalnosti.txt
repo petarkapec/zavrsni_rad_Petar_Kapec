@@ -11,6 +11,10 @@ KORISNIK
 2.2) Kreiranje rezervacije (tokom kreiranja može dodavati stavke kao što su muzičari, rekviziti itd. ali je bitno da se nužno odabere
 jedan prostor)
 
+	Korisnik može tokom pregledavanja na bilo kojem entitetu stisnuti kreiraj rezervaciju s ovim entitetom i onda mora obavezno 	odabrati prostor osim ako taj entitet nije bio prostor
+	
+	Ili može direktno s početne stranice stisnuti gumb kreiraj ponudu s kojeg ga odmah šalje na listu prostora
+
 3) Dodavanje stavki, uređivanje stavki u samoj rezervaciji, osnovne CRUD operacije sa vlastitim rezervacijama korisnika i njihovim stavkama
 
 4) Završetak izrade rezervacije, kreiranje plaćanja preko API od stripe-a 

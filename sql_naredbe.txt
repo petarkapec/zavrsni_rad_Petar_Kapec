@@ -1,0 +1,161 @@
+CREATE DATABASE EventManagement;
+USE EventManagement;
+
+-- Tabela za korisničke profile (generalizovano za sve tipove korisnika)
+CREATE TABLE KorisnickiProfil (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    Ime VARCHAR(100),
+    Email VARCHAR(100) UNIQUE,
+    Telefon VARCHAR(20),
+    Adresa TEXT,
+    Lozinka VARCHAR(255),
+    Tip ENUM('Kupac', 'Iznajmljivac', 'PruzteljiUsluga', 'IzvodjacMuzike'),
+    SlikaProfil VARCHAR(255) NOT NULL -- Svaki korisnik mora imati jednu sliku profila
+);
+
+-- Kupci
+CREATE TABLE Kupci (
+    ID INT PRIMARY KEY,
+    FOREIGN KEY (ID) REFERENCES KorisnickiProfil(ID) ON DELETE CASCADE
+);
+
+-- Iznajmljivači
+CREATE TABLE Iznajmljivaci (
+    ID INT PRIMARY KEY,
+    NazivKompanije VARCHAR(255),
+    KontaktOsoba VARCHAR(100),
+    Opis TEXT,
+    FOREIGN KEY (ID) REFERENCES KorisnickiProfil(ID) ON DELETE CASCADE
+);
+
+-- Prostor za proslave
+CREATE TABLE ProstorZaProslave (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    Naziv VARCHAR(255),
+    Lokacija TEXT,
+    Kapacitet INT,
+    Cijena DECIMAL(10,2),
+    Opis TEXT,
+    ID_Iznajmljivaca INT,
+    FOREIGN KEY (ID_Iznajmljivaca) REFERENCES Iznajmljivaci(ID) ON DELETE SET NULL
+);
+
+-- Izvođači muzike
+CREATE TABLE IzvodjaciMuzike (
+    ID INT PRIMARY KEY,
+    ImeBenda_DJ VARCHAR(255),
+    TipMuzike VARCHAR(100),
+    CijenaPoSatu DECIMAL(10,2),
+    FOREIGN KEY (ID) REFERENCES KorisnickiProfil(ID) ON DELETE CASCADE
+);
+
+-- Dobavljači
+CREATE TABLE Dobavljaci (
+    ID INT PRIMARY KEY,
+    FOREIGN KEY (ID) REFERENCES KorisnickiProfil(ID) ON DELETE CASCADE
+);
+
+-- Catering usluge
+CREATE TABLE CateringUsluge (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    Naziv VARCHAR(255),
+    Opis TEXT,
+    CijenaPoOsobi DECIMAL(10,2),
+    ID_Dobavljaca INT,
+    FOREIGN KEY (ID_Dobavljaca) REFERENCES Dobavljaci(ID) ON DELETE SET NULL
+);
+
+-- Pića
+CREATE TABLE Pica (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    VrstaPica VARCHAR(100),
+    CijenaPoLitru DECIMAL(10,2),
+    ID_Dobavljaca INT,
+    FOREIGN KEY (ID_Dobavljaca) REFERENCES Dobavljaci(ID) ON DELETE SET NULL
+);
+
+-- Osoblje
+CREATE TABLE Osoblje (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    TipOsoblja VARCHAR(100),
+    CijenaPoSatu DECIMAL(10,2),
+    ID_Dobavljaca INT,
+    FOREIGN KEY (ID_Dobavljaca) REFERENCES Dobavljaci(ID) ON DELETE SET NULL
+);
+
+-- Rekviziti
+CREATE TABLE Rekviziti (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    Naziv VARCHAR(255),
+    Opis TEXT,
+    CijenaNajma DECIMAL(10,2),
+    ID_Dobavljaca INT,
+    FOREIGN KEY (ID_Dobavljaca) REFERENCES Dobavljaci(ID) ON DELETE SET NULL
+);
+
+-- Osiguranje
+CREATE TABLE Osiguranje (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    TipOsiguranja VARCHAR(100),
+    CijenaPoDogadjaju DECIMAL(10,2),
+    ID_Pruzalac INT,
+    FOREIGN KEY (ID_Pruzalac) REFERENCES Dobavljaci(ID) ON DELETE SET NULL
+);
+
+-- Rezervacije
+CREATE TABLE Rezervacija (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    ID_Kupca INT,
+    Datum DATE,
+    UkupnaCijena DECIMAL(10,2),
+    FOREIGN KEY (ID_Kupca) REFERENCES Kupci(ID) ON DELETE CASCADE
+);
+
+-- Relacije između rezervacija i drugih usluga
+CREATE TABLE RezervacijaDetalji (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    ID_Rezervacije INT,
+    TipUsluge ENUM('Prostor', 'Catering', 'Pice', 'Osoblje', 'Rekviziti', 'Osiguranje', 'Muzika'),
+    ID_Usluge INT,
+    Kolicina INT DEFAULT 1,
+    CijenaPoJedinici DECIMAL(10,2),
+    FOREIGN KEY (ID_Rezervacije) REFERENCES Rezervacija(ID) ON DELETE CASCADE
+);
+
+-- Recenzije
+CREATE TABLE Recenzije (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    ID_Kupca INT,
+    ID_Usluge INT,
+    TipUsluge ENUM('Prostor', 'Catering', 'Pice', 'Osoblje', 'Rekviziti', 'Osiguranje', 'Muzika'),
+    Ocjena INT CHECK (Ocjena BETWEEN 1 AND 5),
+    Komentar TEXT,
+    FOREIGN KEY (ID_Kupca) REFERENCES Kupci(ID) ON DELETE CASCADE
+);
+
+-- Plaćanja
+CREATE TABLE Placanja (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    ID_Rezervacije INT,
+    Iznos DECIMAL(10,2),
+    DatumPlacanja DATE,
+    Status ENUM('U tijeku', 'Završeno', 'Otkazano'),
+    FOREIGN KEY (ID_Rezervacije) REFERENCES Rezervacija(ID) ON DELETE CASCADE
+);
+
+-- Tabela za spremanje slika
+CREATE TABLE Slike (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    EntitetID INT,
+    TipEntiteta ENUM('Prostor', 'Rekviziti', 'Pica', 'Catering', 'Osoblje', 'Osiguranje', 'IzvodjacMuzike'),
+    Putanja VARCHAR(255),
+    FOREIGN KEY (TipEntiteta, EntitetID) REFERENCES (
+        SELECT 'Prostor', ID FROM ProstorZaProslave
+        UNION ALL SELECT 'Rekviziti', ID FROM Rekviziti
+        UNION ALL SELECT 'Pica', ID FROM Pica
+        UNION ALL SELECT 'Catering', ID FROM CateringUsluge
+        UNION ALL SELECT 'Osoblje', ID FROM Osoblje
+        UNION ALL SELECT 'Osiguranje', ID FROM Osiguranje
+        UNION ALL SELECT 'IzvodjacMuzike', ID FROM IzvodjaciMuzike
+    )
+);

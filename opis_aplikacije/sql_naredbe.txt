@@ -1,161 +1,117 @@
-CREATE DATABASE EventManagement;
-USE EventManagement;
-
--- Tabela za korisničke profile (generalizovano za sve tipove korisnika)
-CREATE TABLE KorisnickiProfil (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
-    Ime VARCHAR(100),
-    Email VARCHAR(100) UNIQUE,
-    Telefon VARCHAR(20),
+-- Tablica za korisnike
+CREATE TABLE Korisnik (
+    KorisnikID INT AUTO_INCREMENT PRIMARY KEY,
+    Email VARCHAR(255) UNIQUE NOT NULL,
+    LozinkaHash VARCHAR(255) NOT NULL,
+    Uloga ENUM('klijent', 'organizator') NOT NULL,
+    Ime VARCHAR(100) NOT NULL,
+    Prezime VARCHAR(100) NOT NULL,
+    Telefon VARCHAR(15),
     Adresa TEXT,
-    Lozinka VARCHAR(255),
-    Tip ENUM('Kupac', 'Iznajmljivac', 'PruzteljiUsluga', 'IzvodjacMuzike'),
-    SlikaProfil VARCHAR(255) NOT NULL -- Svaki korisnik mora imati jednu sliku profila
+    Kreirano DATETIME DEFAULT CURRENT_TIMESTAMP,
+    Ažurirano DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- Kupci
-CREATE TABLE Kupci (
-    ID INT PRIMARY KEY,
-    FOREIGN KEY (ID) REFERENCES KorisnickiProfil(ID) ON DELETE CASCADE
-);
-
--- Iznajmljivači
-CREATE TABLE Iznajmljivaci (
-    ID INT PRIMARY KEY,
-    NazivKompanije VARCHAR(255),
+-- Tablica za organizatore
+CREATE TABLE Organizator (
+    OrganizatorID INT AUTO_INCREMENT PRIMARY KEY,
+    KorisnikID INT,
+    NazivOrganizacije VARCHAR(255) NOT NULL,
+    Opis TEXT,
     KontaktOsoba VARCHAR(100),
+    WebStranica VARCHAR(255),
+    Telefon VARCHAR(15),
+    Email VARCHAR(255),
+    Logo BLOB,
+    Kreirano DATETIME DEFAULT CURRENT_TIMESTAMP,
+    Ažurirano DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (KorisnikID) REFERENCES Korisnici(KorisnikID)
+);
+
+-- Tablica za događaje
+CREATE TABLE Dogadjaj (
+    DogadjajID INT AUTO_INCREMENT PRIMARY KEY,
+    OrganizatorID INT,
+    NazivDogadjaja VARCHAR(255) NOT NULL,
+    TipDogadjaja ENUM('vjenčanje', 'korporativni', 'rođendan', 'koncert', 'spektakl', 'drugi') NOT NULL,
+    DatumPocetka DATETIME NOT NULL,
+    DatumZavrsetka DATETIME NOT NULL,
+    Lokacija VARCHAR(255) NOT NULL,
     Opis TEXT,
-    FOREIGN KEY (ID) REFERENCES KorisnickiProfil(ID) ON DELETE CASCADE
+    MaksimalniGosti INT NOT NULL,
+    RasponCijena VARCHAR(100),
+    Status ENUM('aktivan', 'zavrsen', 'otkazan') DEFAULT 'aktivan',
+    Kreirano DATETIME DEFAULT CURRENT_TIMESTAMP,
+    Ažurirano DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (OrganizatorID) REFERENCES Organizatori(OrganizatorID)
 );
 
--- Prostor za proslave
-CREATE TABLE ProstorZaProslave (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
-    Naziv VARCHAR(255),
-    Lokacija TEXT,
-    Kapacitet INT,
-    Cijena DECIMAL(10,2),
-    Opis TEXT,
-    ID_Iznajmljivaca INT,
-    FOREIGN KEY (ID_Iznajmljivaca) REFERENCES Iznajmljivaci(ID) ON DELETE SET NULL
+-- Tablica za ponude (prostori, catering, zabava, itd.)
+CREATE TABLE Ponuda (
+    PonudaID INT AUTO_INCREMENT PRIMARY KEY,
+    DogadjajID INT,
+    TipPonude ENUM('prostor', 'catering', 'zabava', 'sigurnost', 'prijevoz', 'drugo') NOT NULL,
+    Opis TEXT NOT NULL,
+    Cijena DECIMAL(10, 2) NOT NULL,
+    Dostupnost ENUM('dostupno', 'rezervirano') DEFAULT 'dostupno',
+    Kreirano DATETIME DEFAULT CURRENT_TIMESTAMP,
+    Ažurirano DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (DogadjajID) REFERENCES Dogadjaji(DogadjajID)
 );
 
--- Izvođači muzike
-CREATE TABLE IzvodjaciMuzike (
-    ID INT PRIMARY KEY,
-    ImeBenda_DJ VARCHAR(255),
-    TipMuzike VARCHAR(100),
-    CijenaPoSatu DECIMAL(10,2),
-    FOREIGN KEY (ID) REFERENCES KorisnickiProfil(ID) ON DELETE CASCADE
-);
-
--- Dobavljači
-CREATE TABLE Dobavljaci (
-    ID INT PRIMARY KEY,
-    FOREIGN KEY (ID) REFERENCES KorisnickiProfil(ID) ON DELETE CASCADE
-);
-
--- Catering usluge
-CREATE TABLE CateringUsluge (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
-    Naziv VARCHAR(255),
-    Opis TEXT,
-    CijenaPoOsobi DECIMAL(10,2),
-    ID_Dobavljaca INT,
-    FOREIGN KEY (ID_Dobavljaca) REFERENCES Dobavljaci(ID) ON DELETE SET NULL
-);
-
--- Pića
-CREATE TABLE Pica (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
-    VrstaPica VARCHAR(100),
-    CijenaPoLitru DECIMAL(10,2),
-    ID_Dobavljaca INT,
-    FOREIGN KEY (ID_Dobavljaca) REFERENCES Dobavljaci(ID) ON DELETE SET NULL
-);
-
--- Osoblje
-CREATE TABLE Osoblje (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
-    TipOsoblja VARCHAR(100),
-    CijenaPoSatu DECIMAL(10,2),
-    ID_Dobavljaca INT,
-    FOREIGN KEY (ID_Dobavljaca) REFERENCES Dobavljaci(ID) ON DELETE SET NULL
-);
-
--- Rekviziti
-CREATE TABLE Rekviziti (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
-    Naziv VARCHAR(255),
-    Opis TEXT,
-    CijenaNajma DECIMAL(10,2),
-    ID_Dobavljaca INT,
-    FOREIGN KEY (ID_Dobavljaca) REFERENCES Dobavljaci(ID) ON DELETE SET NULL
-);
-
--- Osiguranje
-CREATE TABLE Osiguranje (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
-    TipOsiguranja VARCHAR(100),
-    CijenaPoDogadjaju DECIMAL(10,2),
-    ID_Pruzalac INT,
-    FOREIGN KEY (ID_Pruzalac) REFERENCES Dobavljaci(ID) ON DELETE SET NULL
-);
-
--- Rezervacije
+-- Tablica za rezervacije
 CREATE TABLE Rezervacija (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
-    ID_Kupca INT,
-    Datum DATE,
-    UkupnaCijena DECIMAL(10,2),
-    FOREIGN KEY (ID_Kupca) REFERENCES Kupci(ID) ON DELETE CASCADE
+    RezervacijaID INT AUTO_INCREMENT PRIMARY KEY,
+    KorisnikID INT,
+    DogadjajID INT,
+    PonudaID INT, -- Ovisno o ponudi (ako je relevantno)
+    DatumRezervacije DATETIME DEFAULT CURRENT_TIMESTAMP,
+    BrojGostiju INT NOT NULL,
+    PosebniZahtjevi TEXT,
+    Status ENUM('na čekanju', 'potvrđeno', 'otkazano') DEFAULT 'na čekanju',
+    Kreirano DATETIME DEFAULT CURRENT_TIMESTAMP,
+    Ažurirano DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (KorisnikID) REFERENCES Korisnici(KorisnikID),
+    FOREIGN KEY (DogadjajID) REFERENCES Dogadjaji(DogadjajID),
+    FOREIGN KEY (PonudaID) REFERENCES Ponude(PonudaID)
 );
 
--- Relacije između rezervacija i drugih usluga
-CREATE TABLE RezervacijaDetalji (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
-    ID_Rezervacije INT,
-    TipUsluge ENUM('Prostor', 'Catering', 'Pice', 'Osoblje', 'Rekviziti', 'Osiguranje', 'Muzika'),
-    ID_Usluge INT,
-    Kolicina INT DEFAULT 1,
-    CijenaPoJedinici DECIMAL(10,2),
-    FOREIGN KEY (ID_Rezervacije) REFERENCES Rezervacija(ID) ON DELETE CASCADE
-);
-
--- Recenzije
+-- Tablica za recenzije
 CREATE TABLE Recenzije (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
-    ID_Kupca INT,
-    ID_Usluge INT,
-    TipUsluge ENUM('Prostor', 'Catering', 'Pice', 'Osoblje', 'Rekviziti', 'Osiguranje', 'Muzika'),
+    RecenzijaID INT AUTO_INCREMENT PRIMARY KEY,
+    DogadjajID INT,
+    KorisnikID INT,
     Ocjena INT CHECK (Ocjena BETWEEN 1 AND 5),
     Komentar TEXT,
-    FOREIGN KEY (ID_Kupca) REFERENCES Kupci(ID) ON DELETE CASCADE
+    Kreirano DATETIME DEFAULT CURRENT_TIMESTAMP,
+    Ažurirano DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (DogadjajID) REFERENCES Dogadjaji(DogadjajID),
+    FOREIGN KEY (KorisnikID) REFERENCES Korisnici(KorisnikID)
 );
 
--- Plaćanja
+-- Tablica za plaćanja
 CREATE TABLE Placanja (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
-    ID_Rezervacije INT,
-    Iznos DECIMAL(10,2),
-    DatumPlacanja DATE,
-    Status ENUM('U tijeku', 'Završeno', 'Otkazano'),
-    FOREIGN KEY (ID_Rezervacije) REFERENCES Rezervacija(ID) ON DELETE CASCADE
+    PlacanjeID INT AUTO_INCREMENT PRIMARY KEY,
+    RezervacijaID INT,
+    Iznos DECIMAL(10, 2) NOT NULL,
+    DatumPlacanja DATETIME DEFAULT CURRENT_TIMESTAMP,
+    MetodaPlacanja ENUM('kreditna kartica', 'bankovni prijenos', 'gotovina') NOT NULL,
+    Status ENUM('na čekanju', 'završeno', 'povrat') DEFAULT 'na čekanju',
+    Kreirano DATETIME DEFAULT CURRENT_TIMESTAMP,
+    Ažurirano DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (RezervacijaID) REFERENCES Rezervacije(RezervacijaID)
 );
 
--- Tabela za spremanje slika
-CREATE TABLE Slike (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
-    EntitetID INT,
-    TipEntiteta ENUM('Prostor', 'Rekviziti', 'Pica', 'Catering', 'Osoblje', 'Osiguranje', 'IzvodjacMuzike'),
-    Putanja VARCHAR(255),
-    FOREIGN KEY (TipEntiteta, EntitetID) REFERENCES (
-        SELECT 'Prostor', ID FROM ProstorZaProslave
-        UNION ALL SELECT 'Rekviziti', ID FROM Rekviziti
-        UNION ALL SELECT 'Pica', ID FROM Pica
-        UNION ALL SELECT 'Catering', ID FROM CateringUsluge
-        UNION ALL SELECT 'Osoblje', ID FROM Osoblje
-        UNION ALL SELECT 'Osiguranje', ID FROM Osiguranje
-        UNION ALL SELECT 'IzvodjacMuzike', ID FROM IzvodjaciMuzike
-    )
+CREATE TABLE Placanja (
+    PlacanjeID INT AUTO_INCREMENT PRIMARY KEY,
+    RezervacijaID INT,
+    Iznos DECIMAL(10, 2) NOT NULL,
+    DatumPlacanja DATETIME DEFAULT CURRENT_TIMESTAMP,
+    MetodaPlacanja ENUM('kreditna kartica', 'bankovni prijenos', 'gotovina') NOT NULL,
+    Status ENUM('na čekanju', 'završeno', 'povrat') DEFAULT 'na čekanju',
+    Kreirano DATETIME DEFAULT CURRENT_TIMESTAMP,
+    Ažurirano DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (RezervacijaID) REFERENCES Rezervacije(RezervacijaID)
 );
+
+

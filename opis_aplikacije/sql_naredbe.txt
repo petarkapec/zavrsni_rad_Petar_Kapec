@@ -1,117 +1,106 @@
--- Tablica za korisnike
+-- Kreiranje osnovnih tipova ako je potrebno
+CREATE TYPE uloga_enum AS ENUM ('Organizator', 'Naručitelj');
+CREATE TYPE kategorija_enum AS ENUM ('Rekviziti', 'Catering', 'Piće', 'Usluga', 'Prostor');
+CREATE TYPE status_placanja_enum AS ENUM ('Nije plaćeno', 'Plaćeno');
+CREATE TYPE status_rezervacije_enum AS ENUM ('Čeka potvrdu', 'Potvrđeno', 'Otkazano');
+
+-- 1. Tablica Korisnik
 CREATE TABLE Korisnik (
-    KorisnikID INT AUTO_INCREMENT PRIMARY KEY,
-    Email VARCHAR(255) UNIQUE NOT NULL,
-    LozinkaHash VARCHAR(255) NOT NULL,
-    Uloga ENUM('klijent', 'organizator') NOT NULL,
-    Ime VARCHAR(100) NOT NULL,
-    Prezime VARCHAR(100) NOT NULL,
-    Telefon VARCHAR(15),
-    Adresa TEXT,
-    Kreirano DATETIME DEFAULT CURRENT_TIMESTAMP,
-    Ažurirano DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    korisnik_id SERIAL PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    ime VARCHAR(50) NOT NULL,
+    prezime VARCHAR(50) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    uloga uloga_enum NOT NULL
 );
 
--- Tablica za organizatore
-CREATE TABLE Organizator (
-    OrganizatorID INT AUTO_INCREMENT PRIMARY KEY,
-    KorisnikID INT,
-    NazivOrganizacije VARCHAR(255) NOT NULL,
-    Opis TEXT,
-    KontaktOsoba VARCHAR(100),
-    WebStranica VARCHAR(255),
-    Telefon VARCHAR(15),
-    Email VARCHAR(255),
-    Logo BLOB,
-    Kreirano DATETIME DEFAULT CURRENT_TIMESTAMP,
-    Ažurirano DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (KorisnikID) REFERENCES Korisnici(KorisnikID)
-);
-
--- Tablica za događaje
-CREATE TABLE Dogadjaj (
-    DogadjajID INT AUTO_INCREMENT PRIMARY KEY,
-    OrganizatorID INT,
-    NazivDogadjaja VARCHAR(255) NOT NULL,
-    TipDogadjaja ENUM('vjenčanje', 'korporativni', 'rođendan', 'koncert', 'spektakl', 'drugi') NOT NULL,
-    DatumPocetka DATETIME NOT NULL,
-    DatumZavrsetka DATETIME NOT NULL,
-    Lokacija VARCHAR(255) NOT NULL,
-    Opis TEXT,
-    MaksimalniGosti INT NOT NULL,
-    RasponCijena VARCHAR(100),
-    Status ENUM('aktivan', 'zavrsen', 'otkazan') DEFAULT 'aktivan',
-    Kreirano DATETIME DEFAULT CURRENT_TIMESTAMP,
-    Ažurirano DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (OrganizatorID) REFERENCES Organizatori(OrganizatorID)
-);
-
--- Tablica za ponude (prostori, catering, zabava, itd.)
+-- 2. Tablica Ponuda
 CREATE TABLE Ponuda (
-    PonudaID INT AUTO_INCREMENT PRIMARY KEY,
-    DogadjajID INT,
-    TipPonude ENUM('prostor', 'catering', 'zabava', 'sigurnost', 'prijevoz', 'drugo') NOT NULL,
-    Opis TEXT NOT NULL,
-    Cijena DECIMAL(10, 2) NOT NULL,
-    Dostupnost ENUM('dostupno', 'rezervirano') DEFAULT 'dostupno',
-    Kreirano DATETIME DEFAULT CURRENT_TIMESTAMP,
-    Ažurirano DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (DogadjajID) REFERENCES Dogadjaji(DogadjajID)
+    ponuda_id SERIAL PRIMARY KEY,
+    naziv VARCHAR(100) NOT NULL,
+    opis TEXT,
+    cijena DECIMAL(10,2) NOT NULL,
+    kategorija kategorija_enum NOT NULL
 );
 
--- Tablica za rezervacije
+-- 3. Tablica Prostor (specijalizacija Ponude)
+CREATE TABLE Prostor (
+    prostor_id INT PRIMARY KEY,
+    adresa TEXT NOT NULL,
+    kapacitet INT NOT NULL,
+    CONSTRAINT fk_prostor_ponuda FOREIGN KEY (prostor_id) REFERENCES Ponuda(ponuda_id) ON DELETE CASCADE,
+    CONSTRAINT chk_prostor_kategorija CHECK (
+        prostor_id IN (SELECT ponuda_id FROM Ponuda WHERE kategorija = 'Prostor')
+    )
+);
+
+-- 4. Tablica Dogadjaj
+CREATE TABLE Dogadjaj (
+    dogadjaj_id SERIAL PRIMARY KEY,
+    naziv VARCHAR(100) NOT NULL,
+    opis TEXT,
+    korisnik_id INT NOT NULL,
+    prostor_id INT NOT NULL,
+    FOREIGN KEY (korisnik_id) REFERENCES Korisnik(korisnik_id) ON DELETE CASCADE,
+    FOREIGN KEY (prostor_id) REFERENCES Prostor(prostor_id) ON DELETE CASCADE
+    -- Constraint da kreira samo organizator ➔ TRIGGER će kasnije ovo provjeriti
+);
+
+-- 5. Tablica DogadjajPonuda (M:N veza između Dogadjaj i Ponuda)
+CREATE TABLE DogadjajPonuda (
+    dogadjaj_id INT NOT NULL,
+    ponuda_id INT NOT NULL,
+    PRIMARY KEY (dogadjaj_id, ponuda_id),
+    FOREIGN KEY (dogadjaj_id) REFERENCES Dogadjaj(dogadjaj_id) ON DELETE CASCADE,
+    FOREIGN KEY (ponuda_id) REFERENCES Ponuda(ponuda_id) ON DELETE CASCADE
+);
+
+-- 6. Tablica Slika (slike događaja)
+CREATE TABLE Slika (
+    slika_id SERIAL PRIMARY KEY,
+    url TEXT NOT NULL,
+    dogadjaj_id INT NOT NULL,
+    FOREIGN KEY (dogadjaj_id) REFERENCES Dogadjaj(dogadjaj_id) ON DELETE CASCADE
+);
+
+-- 7. Tablica Rezervacija
 CREATE TABLE Rezervacija (
-    RezervacijaID INT AUTO_INCREMENT PRIMARY KEY,
-    KorisnikID INT,
-    DogadjajID INT,
-    PonudaID INT, -- Ovisno o ponudi (ako je relevantno)
-    DatumRezervacije DATETIME DEFAULT CURRENT_TIMESTAMP,
-    BrojGostiju INT NOT NULL,
-    PosebniZahtjevi TEXT,
-    Status ENUM('na čekanju', 'potvrđeno', 'otkazano') DEFAULT 'na čekanju',
-    Kreirano DATETIME DEFAULT CURRENT_TIMESTAMP,
-    Ažurirano DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (KorisnikID) REFERENCES Korisnici(KorisnikID),
-    FOREIGN KEY (DogadjajID) REFERENCES Dogadjaji(DogadjajID),
-    FOREIGN KEY (PonudaID) REFERENCES Ponude(PonudaID)
+    rezervacija_id SERIAL PRIMARY KEY,
+    korisnik_id INT NOT NULL,
+    dogadjaj_id INT NOT NULL,
+    datum_pocetka TIMESTAMP NOT NULL,
+    datum_zavrsetka TIMESTAMP NOT NULL,
+    ukupna_cijena DECIMAL(10,2) NOT NULL,
+    posebni_zahtjevi TEXT,
+    status status_rezervacije_enum DEFAULT 'Čeka potvrdu',
+    status_placanja status_placanja_enum DEFAULT 'Nije plaćeno',
+    FOREIGN KEY (korisnik_id) REFERENCES Korisnik(korisnik_id) ON DELETE CASCADE,
+    FOREIGN KEY (dogadjaj_id) REFERENCES Dogadjaj(dogadjaj_id) ON DELETE CASCADE
 );
 
--- Tablica za recenzije
-CREATE TABLE Recenzije (
-    RecenzijaID INT AUTO_INCREMENT PRIMARY KEY,
-    DogadjajID INT,
-    KorisnikID INT,
-    Ocjena INT CHECK (Ocjena BETWEEN 1 AND 5),
-    Komentar TEXT,
-    Kreirano DATETIME DEFAULT CURRENT_TIMESTAMP,
-    Ažurirano DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (DogadjajID) REFERENCES Dogadjaji(DogadjajID),
-    FOREIGN KEY (KorisnikID) REFERENCES Korisnici(KorisnikID)
+-- 8. Tablica Gost (lista gostiju za rezervaciju)
+CREATE TABLE Gost (
+    gost_id SERIAL PRIMARY KEY,
+    rezervacija_id INT NOT NULL,
+    ime VARCHAR(50) NOT NULL,
+    prezime VARCHAR(50),
+    email VARCHAR(100),
+    FOREIGN KEY (rezervacija_id) REFERENCES Rezervacija(rezervacija_id) ON DELETE CASCADE
 );
 
--- Tablica za plaćanja
-CREATE TABLE Placanja (
-    PlacanjeID INT AUTO_INCREMENT PRIMARY KEY,
-    RezervacijaID INT,
-    Iznos DECIMAL(10, 2) NOT NULL,
-    DatumPlacanja DATETIME DEFAULT CURRENT_TIMESTAMP,
-    MetodaPlacanja ENUM('kreditna kartica', 'bankovni prijenos', 'gotovina') NOT NULL,
-    Status ENUM('na čekanju', 'završeno', 'povrat') DEFAULT 'na čekanju',
-    Kreirano DATETIME DEFAULT CURRENT_TIMESTAMP,
-    Ažurirano DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (RezervacijaID) REFERENCES Rezervacije(RezervacijaID)
-);
+-- 9. Trigger da spriječi kreiranje događaja od strane korisnika koji nije "Organizator"
+CREATE OR REPLACE FUNCTION check_organizator() RETURNS TRIGGER AS $$
+BEGIN
+    IF (SELECT uloga FROM Korisnik WHERE korisnik_id = NEW.korisnik_id) <> 'Organizator' THEN
+        RAISE EXCEPTION 'Samo korisnik s ulogom Organizator može kreirati događaj.';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
-CREATE TABLE Placanja (
-    PlacanjeID INT AUTO_INCREMENT PRIMARY KEY,
-    RezervacijaID INT,
-    Iznos DECIMAL(10, 2) NOT NULL,
-    DatumPlacanja DATETIME DEFAULT CURRENT_TIMESTAMP,
-    MetodaPlacanja ENUM('kreditna kartica', 'bankovni prijenos', 'gotovina') NOT NULL,
-    Status ENUM('na čekanju', 'završeno', 'povrat') DEFAULT 'na čekanju',
-    Kreirano DATETIME DEFAULT CURRENT_TIMESTAMP,
-    Ažurirano DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (RezervacijaID) REFERENCES Rezervacije(RezervacijaID)
-);
-
+CREATE TRIGGER trg_check_organizator
+BEFORE INSERT ON Dogadjaj
+FOR EACH ROW
+EXECUTE FUNCTION check_organizator();
 

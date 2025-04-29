@@ -1,49 +1,109 @@
-Osnovne funkcionalnosti u aplikaciji
+Opis baze podataka za aplikaciju za rezervaciju događaja
 
-KORISNIK
+1. Korisnik
+Opis:
+Predstavlja sve korisnike aplikacije. Korisnik može biti u ulozi Organizatora ili Kupca, definirano kroz uloga atribut.
 
-1.1) Registracija korisnika
+Atributi:
+- korisnik_id – jedinstveni identifikator korisnika (primarni ključ)
+- username – jedinstveno korisničko ime
+- ime – osobno ime korisnika
+- prezime – prezime korisnika
+- email – jedinstvena email adresa korisnika
+- password – hashirana lozinka korisnika
+- uloga – ENUM vrijednost ("Organizator" ili "Kupac")
 
-1.2) Prijava korisnika u bazu
+2. Ponuda
+Opis:
+Predstavlja pojedinačnu uslugu, artikl ili prostor koji se može vezati za događaje. Ponuda može biti različite kategorije.
 
-2.1) Pregledavanje prostora, ponuda, eventualnih paketa i osoblja
+Atributi:
+- ponuda_id – jedinstveni identifikator ponude (primarni ključ)
+- naziv – naziv ponude
+- opis – detaljan opis ponude
+- cijena – cijena ponude
+- kategorija – ENUM vrijednost ("Rekviziti", "Catering", "Piće", "Usluga", "Prostor")
 
-2.2) Kreiranje rezervacije (tokom kreiranja može dodavati stavke kao što su muzičari, rekviziti itd. ali je bitno da se nužno odabere
-jedan prostor)
+3. Prostor (podtip Ponude)
+Opis:
+Specijalizirana ponuda koja predstavlja fizički prostor (npr. dvoranu, kuću za zabave itd.). Ima dodatne atribute koji nisu primjenjivi za ostale ponude.
 
-	Korisnik može tokom pregledavanja na bilo kojem entitetu stisnuti kreiraj rezervaciju s ovim entitetom i onda mora obavezno 	odabrati prostor osim ako taj entitet nije bio prostor
-	
-	Ili može direktno s početne stranice stisnuti gumb kreiraj ponudu s kojeg ga odmah šalje na listu prostora
+Atributi:
+- prostor_id – isti kao ponuda_id, jer prostor nasljeđuje osnovnu ponudu (primarni ključ i strani ključ)
+- adresa – fizička lokacija prostora
+- kapacitet – broj ljudi koji prostor može primiti
 
-3) Dodavanje stavki, uređivanje stavki u samoj rezervaciji, osnovne CRUD operacije sa vlastitim rezervacijama korisnika i njihovim stavkama
+4. Događaj
+Opis:
+Predstavlja događaj koji kreira korisnik s ulogom Organizator. Svaki događaj mora biti vezan uz određeni prostor.
 
-4) Završetak izrade rezervacije, kreiranje plaćanja preko API od stripe-a 
+Atributi:
+- dogadjaj_id – jedinstveni identifikator događaja (primarni ključ)
+- naziv – naziv događaja
+- opis – opis događaja
+- korisnik_id – strani ključ na organizatora koji je kreirao događaj
+- prostor_id – strani ključ na prostor koji je vezan uz događaj
 
-(glavni cilj je da stranica računa cijene svih usluga 
-te pošalje upit API-ju od Stripe davatelja usluge koji onda šalje račun korisniku koji to može platiti -> koristit ćemo test Stripe
-API u kojem se ne koristi stvarni novac već je osim pravih bankovnih kartica moguće dodavati i lažne kartice što nam je odlično za testing)
+5. DogadjajPonuda (poveznica M:N)
+Opis:
+Povezuje više ponuda s jednim događajem, odnosno događaj može koristiti više različitih ponuda.
 
-5) mogućnost chata sa osobljem (nisam još dodao u bazu ali budemo ako se odlučimo na izradu chata)
+Atributi:
+- dogadjaj_id – strani ključ na događaj
+- ponuda_id – strani ključ na ponudu
 
+6. Slika
+Opis:
+Predstavlja slike ponuda. Više slika može biti vezano za jednu ponudu.
 
-OSOBLJE -> Iznajmljivaci, dobavljaci, izvođaći muzike i ostalo osoblje
+Atributi:
+- slika_id – jedinstveni identifikator slike (primarni ključ)
+- url – URL adresa slike
+- ponuda_id – strani ključ na ponudu kojoj slika pripada
 
-1.1) registracija osoblja 
+7. Rezervacija
+Opis:
+Predstavlja rezervaciju događaja od strane korisnika s ulogom Kupca. Sadrži informacije o rezerviranom terminu, ukupnoj cijeni, posebnim zahtjevima i statusima.
 
-1.2) prijava osoblja
+Atributi:
+- rezervacija_id – jedinstveni identifikator rezervacije (primarni ključ)
+- korisnik_id – strani ključ na kupca koji je izvršio rezervaciju
+- dogadjaj_id – strani ključ na rezervirani događaj
+- datum_pocetka – početni datum i vrijeme rezervacije
+- datum_zavrsetka – završni datum i vrijeme rezervacije
+- ukupna_cijena – ukupni iznos za rezervaciju
+- posebni_zahtjevi – dodatne napomene korisnika
+- status – ENUM vrijednost ("Čeka potvrdu", "Potvrđeno", "Otkazano"), inicijalno "Čeka potvrdu"
+- status_placanja – ENUM vrijednost ("Nije plaćeno", "Plaćeno"), inicijalno "Nije plaćeno"
 
-2) dodavanje usluge, CRUD operacije nad vlastitim profilom i ponudama
+8. Gost
+Opis:
+Predstavlja gosta unutar rezervacije. Kupac može opcionalno definirati listu gostiju prilikom rezervacije.
 
-3) mogućnost pregleda zarade taj mjesec
+Atributi:
+- gost_id – jedinstveni identifikator gosta (primarni ključ)
+- rezervacija_id – strani ključ na rezervaciju
+- ime – ime gosta
+- prezime – prezime gosta (opcionalno)
+- email – email adresa gosta (opcionalno)
 
-4) mogućnost chata sa kupcima (nisam još dodao u bazu ali budemo ako se odlučimo na izradu chata)
+Ukupna arhitektura i logika:
+- Organizator pregledava ponude i kreira događaj vezan uz prostor.
+- Kupac pregledava feed događaja, odabire događaj i rezervira termin.
+- Prilikom rezervacije, moguće je dodati posebne zahtjeve i goste.
+- Rezervacija započinje sa statusom "Čeka potvrdu" i "nije plaćeno".
+- Organizator potvrđuje rezervaciju, a zatim korisnik može izvršiti plaćanje.
 
+Glavne funkcionalnosti aplikacije:
+Organizator:
+- Pregled profila
+- Pregled ponuda
+- Kreiranje i upravljanje događajima
+- Pregled svih događaja
+- Upravljanje rezervacijama
 
-
-ADMIN
-
-1 admin
-
-mogućnost prijave i CRUD operacije nad svim entitetima u bazi odnosno na stranici
-
+Kupac:
+- Pregled profila
+- Pregled feeda svih događaja
+- Upravljanje vlastitim rezervacijama
 

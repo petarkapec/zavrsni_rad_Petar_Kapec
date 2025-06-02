@@ -22,6 +22,7 @@ Atributi:
 - naziv – naziv ponude
 - opis – detaljan opis ponude
 - cijena – cijena ponude
+- tip_cjene - ENUM vrijednost ("Fiksno", "po osobi")
 - kategorija – ENUM vrijednost ("Rekviziti", "Catering", "Piće", "Usluga", "Prostor")
 
 3. Prostor (podtip Ponude)
@@ -43,6 +44,9 @@ Atributi:
 - opis – opis događaja
 - korisnik_id – strani ključ na organizatora koji je kreirao događaj
 - prostor_id – strani ključ na prostor koji je vezan uz događaj
+- uk_cijena_po_osobi
+- uk_cijena_fiksna
+- otkazni_rok
 
 5. DogadjajPonuda (poveznica M:N)
 Opis:
@@ -80,6 +84,8 @@ Atributi:
 Opis:
 Predstavlja gosta unutar rezervacije. Kupac može opcionalno definirati listu gostiju prilikom rezervacije.
 
+Goste se mor
+
 Atributi:
 - gost_id – jedinstveni identifikator gosta (primarni ključ)
 - rezervacija_id – strani ključ na rezervaciju
@@ -107,4 +113,7 @@ Kupac:
 - Pregled feeda svih događaja
 - Upravljanje vlastitim rezervacijama
 
+Evo još kako bi fukncioniralo plaćanje sa stanjima -> organizator sastavlja ponudu i stavlja u opis događaja fiksnu cijenu + cijenu po osobi.
+ Kada kupac sastavi rezervaciju izracuna mu se ukupna cijena (pomnoze se osobe sa cijenom po gostu) i placanje je u stanju (na cekanju)
+ nakon toga moze platiti gdje se stanje mjenja u (placeno) ili otkazati gdje se stanje mjenja u (otkazano). Ako ne plati u roku predviđenom prije rezervacije mjenja se stanje u (otkazano) automatski
 

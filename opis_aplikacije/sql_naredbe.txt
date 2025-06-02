@@ -103,4 +103,3 @@ CREATE TRIGGER trg_check_organizator
 BEFORE INSERT ON Dogadjaj
 FOR EACH ROW
 EXECUTE FUNCTION check_organizator();
-

@@ -15,7 +15,7 @@ import java.util.Set;
 
 @Entity
 public class Korisnik {
-
+    //Korisnik
     @Id
     @Column(nullable = false, updatable = false)
     @SequenceGenerator(

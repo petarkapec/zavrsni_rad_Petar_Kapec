@@ -48,6 +48,9 @@ public class Dogadjaj {
     @Column(nullable = false)
     private Integer otkazniRok;
 
+
+    private String slikaUrl;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "korisnik_id", nullable = false)
     private Korisnik korisnik;
@@ -66,6 +69,14 @@ public class Dogadjaj {
 
     @OneToMany(mappedBy = "dogadjaj")
     private Set<Rezervacija> dogadjajRezervacijas;
+
+    public String getSlikaUrl() {
+        return slikaUrl;
+    }
+
+    public void setSlikaUrl(String slikaUrl) {
+        this.slikaUrl = slikaUrl;
+    }
 
     public Integer getDogadjajId() {
         return dogadjajId;

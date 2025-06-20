@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState, useEffect } from "react"
 import api from "../../services/api"
-import { Calendar, Edit, Trash2, Plus, Search, MapPin, Users, X } from "lucide-react"
+import { Calendar, Edit, Trash2, Plus, Search, MapPin, Users, X, Upload, ImageIcon } from "lucide-react"
 import { useAuth } from "../../context/AuthContext"
 
 type Event = {
@@ -21,6 +21,7 @@ type Event = {
   prostorAdresa?: string
   prostorKapacitet?: number
   komisija?: number
+  slikaUrl?: string
 }
 
 type Space = {
@@ -39,6 +40,10 @@ type Offer = {
   tipCijene: "FIKSNO" | "PO_OSOBI"
 }
 
+// Cloudinary configuration - replace with your actual cloud name
+const CLOUDINARY_CLOUD_NAME = "your-cloud-name" // Replace with your Cloudinary cloud name
+const CLOUDINARY_UPLOAD_PRESET = "your-upload-preset" // Replace with your upload preset
+
 const OrganizerEvents = () => {
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
@@ -56,6 +61,11 @@ const OrganizerEvents = () => {
   const [showSpaceDropdown, setShowSpaceDropdown] = useState(false)
   const [showOfferDropdown, setShowOfferDropdown] = useState(false)
 
+  // Image upload states
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string>("")
+  const [uploadingImage, setUploadingImage] = useState(false)
+
   const safeToFixed = (value: any) => {
     const num = Number(value)
     return isNaN(num) ? "0.00" : num.toFixed(2)
@@ -68,6 +78,7 @@ const OrganizerEvents = () => {
     prostorId: 0,
     komisija: 0,
     otkazniRok: 7,
+    slikaUrl: "",
   })
 
   // Calculated prices (for display only)
@@ -162,6 +173,44 @@ const OrganizerEvents = () => {
     }
   }
 
+  // Handle image file selection
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setImageFile(file)
+      // Create preview
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  // Upload image to Cloudinary
+  const uploadImageToCloudinary = async (file: File): Promise<string> => {
+    const formData = new FormData()
+    formData.append("file", file)
+    formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET)
+
+    try {
+      const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+        method: "POST",
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to upload image")
+      }
+
+      const data = await response.json()
+      return data.secure_url
+    } catch (error) {
+      console.error("Error uploading image:", error)
+      throw error
+    }
+  }
+
   // Update the handleInputChange function to use prostorId instead of prostor
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
@@ -185,8 +234,17 @@ const OrganizerEvents = () => {
     e.preventDefault()
 
     try {
+      setUploadingImage(true)
+
       // Calculate final prices before submitting
       const { fixedPrice, perPersonPrice } = calculatePrices()
+
+      let imageUrl = formData.slikaUrl
+
+      // Upload image if a new one is selected
+      if (imageFile) {
+        imageUrl = await uploadImageToCloudinary(imageFile)
+      }
 
       const eventData = {
         naziv: formData.naziv,
@@ -197,6 +255,7 @@ const OrganizerEvents = () => {
         korisnik: user?.korisnikId,
         prostorId: Number(formData.prostorId) || 0, // Ensure prostorId is a number
         dogadjajPonudaPonudas: selectedOffers,
+        slikaUrl: imageUrl,
       }
 
       if (editingEvent) {
@@ -209,6 +268,9 @@ const OrganizerEvents = () => {
       resetForm()
     } catch (error) {
       console.error("Failed to save event", error)
+      alert("Greška pri spremanju događaja. Molimo pokušajte ponovo.")
+    } finally {
+      setUploadingImage(false)
     }
   }
 
@@ -221,13 +283,16 @@ const OrganizerEvents = () => {
       prostorId: event.prostorId,
       komisija: event.komisija || 0,
       otkazniRok: event.otkazniRok,
+      slikaUrl: event.slikaUrl || "",
     })
     setSelectedOffers(event.dogadjajPonudaPonudas || [])
+    setImagePreview(event.slikaUrl || "")
+    setImageFile(null)
     setShowModal(true)
   }
 
   const handleDelete = async (eventId: number) => {
-    if (window.confirm("Are you sure you want to delete this event?")) {
+    if (window.confirm("Jeste li sigurni da želite obrisati ovaj događaj?")) {
       try {
         await api.delete(`/dogadjaji/${eventId}`)
         fetchEvents()
@@ -245,6 +310,7 @@ const OrganizerEvents = () => {
       prostorId: 0,
       komisija: 0,
       otkazniRok: 7,
+      slikaUrl: "",
     })
     setSelectedOffers([])
     setEditingEvent(null)
@@ -253,6 +319,8 @@ const OrganizerEvents = () => {
     setOfferSearchTerm("")
     setShowSpaceDropdown(false)
     setShowOfferDropdown(false)
+    setImageFile(null)
+    setImagePreview("")
   }
 
   const filteredEvents = events.filter(
@@ -288,15 +356,15 @@ const OrganizerEvents = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Events</h1>
-          <p className="mt-1 text-sm text-gray-500">Manage your events and create new ones.</p>
+          <h1 className="text-2xl font-semibold text-gray-900">Događaji</h1>
+          <p className="mt-1 text-sm text-gray-500">Upravljajte svojim događajima i stvorite nove.</p>
         </div>
         <button
           onClick={() => setShowModal(true)}
           className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
         >
           <Plus className="h-4 w-4 mr-2" />
-          New Event
+          Novi događaj
         </button>
       </div>
 
@@ -306,7 +374,7 @@ const OrganizerEvents = () => {
         </div>
         <input
           type="text"
-          placeholder="Search events..."
+          placeholder="Pretraži događaje..."
           className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
@@ -321,8 +389,23 @@ const OrganizerEvents = () => {
                 <div className="px-4 py-4 sm:px-6">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
-                      <div className="flex-shrink-0 bg-indigo-100 rounded-md p-2">
-                        <Calendar className="h-6 w-6 text-indigo-600" />
+                      <div className="flex-shrink-0 bg-indigo-100 rounded-md p-2 w-16 h-16 overflow-hidden">
+                        {event.slikaUrl ? (
+                          <img
+                            src={event.slikaUrl || "/placeholder.svg"}
+                            alt={event.naziv}
+                            className="w-full h-full object-cover rounded"
+                            onError={(e) => {
+                              // Fallback to icon if image fails to load
+                              const target = e.target as HTMLImageElement
+                              target.style.display = "none"
+                              target.nextElementSibling?.classList.remove("hidden")
+                            }}
+                          />
+                        ) : (
+                          <Calendar className="h-full w-full text-indigo-600" />
+                        )}
+                        {event.slikaUrl && <Calendar className="h-full w-full text-indigo-600 hidden" />}
                       </div>
                       <div className="ml-4">
                         <p className="text-sm font-medium text-indigo-600">{event.naziv}</p>
@@ -361,16 +444,16 @@ const OrganizerEvents = () => {
                         )}
                         {event.ukCijenaPoOsobi && (
                           <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
-                            Per Person: {formatPrice(event.ukCijenaPoOsobi)} €
+                            Po osobi: {formatPrice(event.ukCijenaPoOsobi)} €
                           </span>
                         )}
                         {event.komisija && (
                           <span className="px-2 py-1 text-xs font-medium bg-purple-100 text-purple-800 rounded-full">
-                            Commission: {event.komisija} €
+                            Komisija: {event.komisija} €
                           </span>
                         )}
                         <span className="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">
-                          Cancel: {event.otkazniRok} days
+                          Otkazni rok: {event.otkazniRok} dana
                         </span>
                         {event.prostorKapacitet && (
                           <span className="px-2 py-1 text-xs font-medium bg-purple-100 text-purple-800 rounded-full flex items-center">
@@ -382,7 +465,7 @@ const OrganizerEvents = () => {
                     </div>
                     <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
                       <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">
-                        {event.dogadjajPonudaPonudas?.length || 0} offers
+                        {event.dogadjajPonudaPonudas?.length || 0} ponude
                       </span>
                     </div>
                   </div>
@@ -390,7 +473,9 @@ const OrganizerEvents = () => {
               </li>
             ))
           ) : (
-            <li className="px-4 py-6 text-center text-gray-500">No events found. Create your first event!</li>
+            <li className="px-4 py-6 text-center text-gray-500">
+              Nema pronađenih događaja. Stvorite svoj prvi događaj!
+            </li>
           )}
         </ul>
       </div>
@@ -413,12 +498,12 @@ const OrganizerEvents = () => {
                   <div className="sm:flex sm:items-start">
                     <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
                       <h3 className="text-lg leading-6 font-medium text-gray-900">
-                        {editingEvent ? "Edit Event" : "Create New Event"}
+                        {editingEvent ? "Uredi događaj" : "Stvori novi događaj"}
                       </h3>
                       <div className="mt-4 space-y-4">
                         <div>
                           <label htmlFor="naziv" className="block text-sm font-medium text-gray-700">
-                            Event Name
+                            Naziv događaja
                           </label>
                           <input
                             type="text"
@@ -432,7 +517,7 @@ const OrganizerEvents = () => {
                         </div>
                         <div>
                           <label htmlFor="opis" className="block text-sm font-medium text-gray-700">
-                            Description
+                            Opis
                           </label>
                           <textarea
                             name="opis"
@@ -444,13 +529,61 @@ const OrganizerEvents = () => {
                           />
                         </div>
 
+                        {/* Image Upload Section */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Slika događaja</label>
+                          <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                            <div className="space-y-1 text-center">
+                              {imagePreview ? (
+                                <div className="relative">
+                                  <img
+                                    src={imagePreview || "/placeholder.svg"}
+                                    alt="Preview"
+                                    className="mx-auto h-32 w-32 object-cover rounded-md"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setImagePreview("")
+                                      setImageFile(null)
+                                      setFormData((prev) => ({ ...prev, slikaUrl: "" }))
+                                    }}
+                                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </button>
+                                </div>
+                              ) : (
+                                <ImageIcon className="mx-auto h-12 w-12 text-gray-400" />
+                              )}
+                              <div className="flex text-sm text-gray-600">
+                                <label
+                                  htmlFor="image-upload"
+                                  className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500"
+                                >
+                                  <span>{imagePreview ? "Promijeni sliku" : "Učitaj sliku"}</span>
+                                  <input
+                                    id="image-upload"
+                                    name="image-upload"
+                                    type="file"
+                                    accept="image/*"
+                                    className="sr-only"
+                                    onChange={handleImageChange}
+                                  />
+                                </label>
+                              </div>
+                              <p className="text-xs text-gray-500">PNG, JPG, GIF do 10MB</p>
+                            </div>
+                          </div>
+                        </div>
+
                         {/* Space Search */}
                         <div className="relative">
-                          <label className="block text-sm font-medium text-gray-700">Space</label>
+                          <label className="block text-sm font-medium text-gray-700">Prostor</label>
                           <div className="mt-1 relative">
                             <input
                               type="text"
-                              placeholder="Search for a space..."
+                              placeholder="Pretraži prostor..."
                               value={selectedSpace ? selectedSpace.naziv : spaceSearchTerm}
                               onChange={(e) => {
                                 setSpaceSearchTerm(e.target.value)
@@ -496,7 +629,7 @@ const OrganizerEvents = () => {
                                 </div>
                               ))}
                               {filteredSpaces.length === 0 && (
-                                <div className="py-2 pl-3 pr-9 text-gray-500">No spaces found</div>
+                                <div className="py-2 pl-3 pr-9 text-gray-500">Nema pronađenih prostora</div>
                               )}
                             </div>
                           )}
@@ -505,7 +638,7 @@ const OrganizerEvents = () => {
                         <div className="grid grid-cols-2 gap-4">
                           <div>
                             <label htmlFor="komisija" className="block text-sm font-medium text-gray-700">
-                              Commission (€)
+                              Provizija (€)
                             </label>
                             <input
                               type="number"
@@ -517,11 +650,11 @@ const OrganizerEvents = () => {
                               onChange={handleInputChange}
                               className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                             />
-                            <div className="mt-1 text-xs text-gray-500">Your fee for organizing this event</div>
+                            <div className="mt-1 text-xs text-gray-500">Vaša naknada za organizaciju ovog događaja</div>
                           </div>
                           <div>
                             <label htmlFor="otkazniRok" className="block text-sm font-medium text-gray-700">
-                              Cancellation Period (days)
+                              Otkazni rok (dani)
                             </label>
                             <input
                               type="number"
@@ -537,14 +670,14 @@ const OrganizerEvents = () => {
 
                         {/* Price Summary */}
                         <div className="bg-gray-50 p-4 rounded-md">
-                          <h4 className="text-sm font-medium text-gray-700 mb-2">Price Summary</h4>
+                          <h4 className="text-sm font-medium text-gray-700 mb-2">Sažetak cijene</h4>
                           <div className="space-y-2 text-sm">
                             <div className="flex justify-between">
-                              <span>Space cost:</span>
+                              <span>Cijena prostora:</span>
                               <span>{selectedSpace ? Number(selectedSpace.cijena).toFixed(2) : "0.00"} €</span>
                             </div>
                             <div className="flex justify-between">
-                              <span>Fixed offers:</span>
+                              <span>Fiksne ponude:</span>
                               <span>
                                 {selectedOffers
                                   .reduce((sum, offerId) => {
@@ -556,11 +689,11 @@ const OrganizerEvents = () => {
                               </span>
                             </div>
                             <div className="flex justify-between">
-                              <span>Commission:</span>
+                              <span>Provizija:</span>
                               <span>{Number(formData.komisija).toFixed(2)} €</span>
                             </div>
                             <div className="flex justify-between">
-                              <span>Per person offers:</span>
+                              <span>Ponude po osobi:</span>
                               <span>
                                 {selectedOffers
                                   .reduce((sum, offerId) => {
@@ -573,11 +706,11 @@ const OrganizerEvents = () => {
                             </div>
                             <div className="pt-2 border-t border-gray-200">
                               <div className="flex justify-between font-medium">
-                                <span>Total fixed price:</span>
+                                <span>Ukupna fiksna cijena:</span>
                                 <span>{calculatedPrices.fixedPrice.toFixed(2)} €</span>
                               </div>
                               <div className="flex justify-between font-medium">
-                                <span>Total per person price:</span>
+                                <span>Ukupna cijena po osobi:</span>
                                 <span>{calculatedPrices.perPersonPrice.toFixed(2)} €</span>
                               </div>
                             </div>
@@ -586,11 +719,11 @@ const OrganizerEvents = () => {
 
                         {/* Offers Search */}
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Select Offers</label>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Odaberite ponude</label>
                           <div className="relative">
                             <input
                               type="text"
-                              placeholder="Search for offers..."
+                              placeholder="Pretraži ponude..."
                               value={offerSearchTerm}
                               onChange={(e) => {
                                 setOfferSearchTerm(e.target.value)
@@ -625,7 +758,7 @@ const OrganizerEvents = () => {
                                   </div>
                                 ))}
                                 {filteredOffers.length === 0 && (
-                                  <div className="py-2 pl-3 pr-9 text-gray-500">No offers found</div>
+                                  <div className="py-2 pl-3 pr-9 text-gray-500">Nema pronađenih ponuda</div>
                                 )}
                               </div>
                             )}
@@ -634,7 +767,7 @@ const OrganizerEvents = () => {
                           {/* Selected offers */}
                           {selectedOffers.length > 0 && (
                             <div className="mt-2">
-                              <div className="text-sm text-gray-700 mb-2">Selected offers:</div>
+                              <div className="text-sm text-gray-700 mb-2">Odabrane ponude:</div>
                               <div className="flex flex-wrap gap-2">
                                 {selectedOffers.map((offerId) => {
                                   const offer = offers.find((o) => o.ponudaId === offerId)
@@ -643,7 +776,7 @@ const OrganizerEvents = () => {
                                       key={offerId}
                                       className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800"
                                     >
-                                      {offer.naziv} ({offer.tipCijene === "FIKSNO" ? "Fixed" : "Per Person"})
+                                      {offer.naziv} ({offer.tipCijene === "FIKSNO" ? "Fiksno" : "Po osobi"})
                                       <button
                                         type="button"
                                         onClick={() => handleOfferToggle(offerId)}
@@ -665,17 +798,26 @@ const OrganizerEvents = () => {
                 <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                   <button
                     type="submit"
-                    disabled={!formData.prostorId}
+                    disabled={!formData.prostorId || uploadingImage}
                     className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {editingEvent ? "Update" : "Create"}
+                    {uploadingImage ? (
+                      <div className="flex items-center">
+                        <Upload className="animate-spin h-4 w-4 mr-2" />
+                        Učitavam...
+                      </div>
+                    ) : editingEvent ? (
+                      "Ažuriraj"
+                    ) : (
+                      "Stvori"
+                    )}
                   </button>
                   <button
                     type="button"
                     onClick={resetForm}
                     className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
                   >
-                    Cancel
+                    Odustani
                   </button>
                 </div>
               </form>

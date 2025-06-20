@@ -24,8 +24,6 @@ const OrganizerOffers = () => {
   const [searchTerm, setSearchTerm] = useState("")
   const { user } = useAuth()
 
-
-
   const [formData, setFormData] = useState({
     naziv: "",
     opis: "",
@@ -89,7 +87,7 @@ const OrganizerOffers = () => {
   }
 
   const handleDelete = async (offerId: number) => {
-    if (window.confirm("Are you sure you want to delete this offer?")) {
+    if (window.confirm("Jeste li sigurni da želite obrisati ovu ponudu?")) {
       try {
         await api.delete(`/ponude/${offerId}`)
         fetchOffers()
@@ -135,22 +133,22 @@ const OrganizerOffers = () => {
   }
 
   if (loading) {
-    return <div className="flex justify-center items-center h-64">Loading...</div>
+    return <div className="flex justify-center items-center h-64">Učitavam...</div>
   }
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Offers</h1>
-          <p className="mt-1 text-sm text-gray-500">Manage your offers and services.</p>
+          <h1 className="text-2xl font-semibold text-gray-900">Ponude</h1>
+          <p className="mt-1 text-sm text-gray-500">Upravljajte svojim ponudama i uslugama.</p>
         </div>
         <button
           onClick={() => setShowModal(true)}
           className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
         >
           <Plus className="h-4 w-4 mr-2" />
-          New Offer
+          Nova ponuda
         </button>
       </div>
 
@@ -160,7 +158,7 @@ const OrganizerOffers = () => {
         </div>
         <input
           type="text"
-          placeholder="Search offers..."
+          placeholder="Pretraži ponude..."
           className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
@@ -172,7 +170,6 @@ const OrganizerOffers = () => {
           {filteredOffers.length > 0 ? (
             filteredOffers.map((offer) => (
               <li key={offer.ponudaId}>
-                
                 <div className="px-4 py-4 sm:px-6">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
@@ -219,7 +216,7 @@ const OrganizerOffers = () => {
               </li>
             ))
           ) : (
-            <li className="px-4 py-6 text-center text-gray-500">No offers found. Create your first offer!</li>
+            <li className="px-4 py-6 text-center text-gray-500">Nema pronađenih ponuda. Stvorite svoju prvu ponudu!</li>
           )}
         </ul>
       </div>
@@ -242,12 +239,12 @@ const OrganizerOffers = () => {
                   <div className="sm:flex sm:items-start">
                     <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
                       <h3 className="text-lg leading-6 font-medium text-gray-900">
-                        {editingOffer ? "Edit Offer" : "Create New Offer"}
+                        {editingOffer ? "Uredi ponudu" : "Stvori novu ponudu"}
                       </h3>
                       <div className="mt-4 space-y-4">
                         <div>
                           <label htmlFor="naziv" className="block text-sm font-medium text-gray-700">
-                            Offer Name
+                            Naziv ponude
                           </label>
                           <input
                             type="text"
@@ -261,7 +258,7 @@ const OrganizerOffers = () => {
                         </div>
                         <div>
                           <label htmlFor="opis" className="block text-sm font-medium text-gray-700">
-                            Description
+                            Opis
                           </label>
                           <textarea
                             name="opis"
@@ -275,7 +272,7 @@ const OrganizerOffers = () => {
                         <div className="grid grid-cols-2 gap-4">
                           <div>
                             <label htmlFor="kategorija" className="block text-sm font-medium text-gray-700">
-                              Category
+                              Kategorija
                             </label>
                             <select
                               name="kategorija"
@@ -293,7 +290,7 @@ const OrganizerOffers = () => {
                           </div>
                           <div>
                             <label htmlFor="tipCijene" className="block text-sm font-medium text-gray-700">
-                              Price Type
+                              Tip cijene
                             </label>
                             <select
                               name="tipCijene"
@@ -310,7 +307,7 @@ const OrganizerOffers = () => {
                         </div>
                         <div>
                           <label htmlFor="cijena" className="block text-sm font-medium text-gray-700">
-                            Price (€)
+                            Cijena (€)
                           </label>
                           <input
                             type="number"
@@ -333,14 +330,14 @@ const OrganizerOffers = () => {
                     type="submit"
                     className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm"
                   >
-                    {editingOffer ? "Update" : "Create"}
+                    {editingOffer ? "Ažuriraj" : "Stvori"}
                   </button>
                   <button
                     type="button"
                     onClick={resetForm}
                     className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
                   >
-                    Cancel
+                    Odustani
                   </button>
                 </div>
               </form>

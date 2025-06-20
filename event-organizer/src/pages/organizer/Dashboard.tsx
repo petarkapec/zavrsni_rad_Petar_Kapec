@@ -39,14 +39,14 @@ const OrganizerDashboard = () => {
   }, [])
 
   if (loading) {
-    return <div className="flex justify-center items-center h-64">Loading...</div>
+    return <div className="flex justify-center items-center h-64">Učitavam...</div>
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Organizer Dashboard</h1>
-        <p className="mt-1 text-sm text-gray-500">Overview of your events, reservations, offers, and spaces.</p>
+        <h1 className="text-2xl font-semibold text-gray-900">Nadzorna ploča organizatora</h1>
+        <p className="mt-1 text-sm text-gray-500">Pregled vaših događaja, rezervacija, ponuda i prostora.</p>
       </div>
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -58,7 +58,7 @@ const OrganizerDashboard = () => {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Total Events</dt>
+                  <dt className="text-sm font-medium text-gray-500 truncate">Ukupno događaja</dt>
                   <dd>
                     <div className="text-lg font-medium text-gray-900">{stats.totalEvents}</div>
                   </dd>
@@ -69,7 +69,7 @@ const OrganizerDashboard = () => {
           <div className="bg-gray-50 px-5 py-3">
             <div className="text-sm">
               <Link to="/organizer/events" className="font-medium text-indigo-600 hover:text-indigo-500">
-                View all
+                Prikaži sve
               </Link>
             </div>
           </div>
@@ -83,7 +83,7 @@ const OrganizerDashboard = () => {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Total Reservations</dt>
+                  <dt className="text-sm font-medium text-gray-500 truncate">Ukupno rezervacija</dt>
                   <dd>
                     <div className="text-lg font-medium text-gray-900">{stats.totalReservations}</div>
                   </dd>
@@ -94,7 +94,7 @@ const OrganizerDashboard = () => {
           <div className="bg-gray-50 px-5 py-3">
             <div className="text-sm">
               <Link to="/organizer/reservations" className="font-medium text-indigo-600 hover:text-indigo-500">
-                View all
+                Prikaži sve
               </Link>
             </div>
           </div>
@@ -108,7 +108,7 @@ const OrganizerDashboard = () => {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Total Offers</dt>
+                  <dt className="text-sm font-medium text-gray-500 truncate">Ukupno ponuda</dt>
                   <dd>
                     <div className="text-lg font-medium text-gray-900">{stats.totalOffers}</div>
                   </dd>
@@ -119,7 +119,7 @@ const OrganizerDashboard = () => {
           <div className="bg-gray-50 px-5 py-3">
             <div className="text-sm">
               <Link to="/organizer/offers" className="font-medium text-indigo-600 hover:text-indigo-500">
-                View all
+                Prikaži sve
               </Link>
             </div>
           </div>
@@ -133,7 +133,7 @@ const OrganizerDashboard = () => {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Total Spaces</dt>
+                  <dt className="text-sm font-medium text-gray-500 truncate">Ukupno prostora</dt>
                   <dd>
                     <div className="text-lg font-medium text-gray-900">{stats.totalSpaces}</div>
                   </dd>
@@ -144,7 +144,7 @@ const OrganizerDashboard = () => {
           <div className="bg-gray-50 px-5 py-3">
             <div className="text-sm">
               <Link to="/organizer/spaces" className="font-medium text-indigo-600 hover:text-indigo-500">
-                View all
+                Prikaži sve
               </Link>
             </div>
           </div>
@@ -154,12 +154,12 @@ const OrganizerDashboard = () => {
       <div className="bg-white shadow overflow-hidden sm:rounded-lg">
         <div className="px-4 py-5 sm:px-6 flex justify-between items-center">
           <div>
-            <h3 className="text-lg leading-6 font-medium text-gray-900">Upcoming Reservations</h3>
-            <p className="mt-1 max-w-2xl text-sm text-gray-500">Your most recent reservations that need attention.</p>
+            <h3 className="text-lg leading-6 font-medium text-gray-900">Nadolazeće rezervacije</h3>
+            <p className="mt-1 max-w-2xl text-sm text-gray-500">Vaše najnovije rezervacije koje zahtijevaju pažnju.</p>
           </div>
           <div className="flex items-center bg-yellow-100 px-3 py-1 rounded-full">
             <TrendingUp className="h-4 w-4 text-yellow-600 mr-1" />
-            <span className="text-sm font-medium text-yellow-800">{stats.upcomingReservations} pending</span>
+            <span className="text-sm font-medium text-yellow-800">{stats.upcomingReservations} na čekanju</span>
           </div>
         </div>
         <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
@@ -167,7 +167,7 @@ const OrganizerDashboard = () => {
             to="/organizer/reservations"
             className="block text-sm font-medium text-indigo-600 hover:text-indigo-500 text-center py-4"
           >
-            View all reservations
+            Prikaži sve rezervacije
           </Link>
         </div>
       </div>

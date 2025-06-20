@@ -15,16 +15,16 @@ const Layout = () => {
 
   const navigation = isOrganizer
     ? [
-        { name: "Dashboard", href: `${baseUrl}/dashboard`, icon: Home },
-        { name: "Events", href: `${baseUrl}/events`, icon: Calendar },
-        { name: "Offers", href: `${baseUrl}/offers`, icon: Package },
-        { name: "Spaces", href: `${baseUrl}/spaces`, icon: MapPin },
-        { name: "Reservations", href: `${baseUrl}/reservations`, icon: BookOpen },
+        { name: "Nadzorna ploča", href: `${baseUrl}/dashboard`, icon: Home },
+        { name: "Događaji", href: `${baseUrl}/events`, icon: Calendar },
+        { name: "Ponude", href: `${baseUrl}/offers`, icon: Package },
+        { name: "Prostori", href: `${baseUrl}/spaces`, icon: MapPin },
+        { name: "Rezervacije", href: `${baseUrl}/reservations`, icon: BookOpen },
       ]
     : [
-        { name: "Dashboard", href: `${baseUrl}/dashboard`, icon: Home },
-        { name: "Events", href: `${baseUrl}/events`, icon: Calendar },
-        { name: "My Reservations", href: `${baseUrl}/reservations`, icon: BookOpen },
+        { name: "Nadzorna ploča", href: `${baseUrl}/dashboard`, icon: Home },
+        { name: "Događaji", href: `${baseUrl}/events`, icon: Calendar },
+        { name: "Moje rezervacije", href: `${baseUrl}/reservations`, icon: BookOpen },
       ]
 
   return (
@@ -33,7 +33,7 @@ const Layout = () => {
       <div className="hidden md:flex md:w-64 md:flex-col">
         <div className="flex flex-col flex-grow pt-5 overflow-y-auto bg-white border-r">
           <div className="flex items-center flex-shrink-0 px-4">
-            <span className="text-xl font-semibold">Event Organizer</span>
+            <span className="text-xl font-semibold">Organizator Događaja</span>
           </div>
           <div className="flex flex-col flex-grow px-4 mt-5">
             <nav className="flex-1 space-y-1">
@@ -92,7 +92,7 @@ const Layout = () => {
               className="ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
               onClick={() => setMobileMenuOpen(false)}
             >
-              <span className="sr-only">Close sidebar</span>
+              <span className="sr-only">Zatvori bočnu traku</span>
               <svg
                 className="h-6 w-6 text-white"
                 xmlns="http://www.w3.org/2000/svg"
@@ -107,7 +107,7 @@ const Layout = () => {
           </div>
           <div className="flex-1 h-0 pt-5 pb-4 overflow-y-auto">
             <div className="flex-shrink-0 flex items-center px-4">
-              <span className="text-xl font-semibold">Event Organizer</span>
+              <span className="text-xl font-semibold">Organizator Događaja</span>
             </div>
             <nav className="mt-5 px-2 space-y-1">
               {navigation.map((item) => {
@@ -165,7 +165,7 @@ const Layout = () => {
             className="px-4 border-r border-gray-200 text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 md:hidden"
             onClick={() => setMobileMenuOpen(true)}
           >
-            <span className="sr-only">Open sidebar</span>
+            <span className="sr-only">Otvori bočnu traku</span>
             <svg
               className="h-6 w-6"
               xmlns="http://www.w3.org/2000/svg"
@@ -179,7 +179,7 @@ const Layout = () => {
           </button>
           <div className="flex-1 px-4 flex justify-between">
             <div className="flex-1 flex items-center">
-              <span className="text-lg font-semibold">Event Organizer</span>
+              <span className="text-lg font-semibold">Organizator Događaja</span>
             </div>
           </div>
         </div>

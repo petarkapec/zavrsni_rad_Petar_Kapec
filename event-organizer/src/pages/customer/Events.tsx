@@ -22,6 +22,7 @@ type Event = {
   organizatorIme: string
   organizatorPrezime: string
   dogadjajPonudaPonudas: number[]
+  slikaUrl?: string
 }
 
 type FilterOptions = {
@@ -51,7 +52,7 @@ const CustomerEvents = () => {
         setLoading(true)
         setError(null)
 
-        const response = await api.get("/dogadjaji")
+        const response = await api.get("/dogadjaji/svi")
         console.log("Fetched events:", response.data)
 
         // The API already returns all the data we need, no need for additional fetching
@@ -59,7 +60,7 @@ const CustomerEvents = () => {
         setFilteredEvents(response.data)
       } catch (error) {
         console.error("Error fetching events:", error)
-        setError("Failed to load events. Please try again later.")
+        setError("Neuspješno učitavanje događaja. Molimo pokušajte kasnije.")
       } finally {
         setLoading(false)
       }
@@ -159,7 +160,7 @@ const CustomerEvents = () => {
   }
 
   if (loading) {
-    return <div className="flex justify-center items-center h-64">Loading events...</div>
+    return <div className="flex justify-center items-center h-64">Učitavam događaje...</div>
   }
 
   if (error) {
@@ -172,7 +173,7 @@ const CustomerEvents = () => {
               onClick={() => window.location.reload()}
               className="mt-2 text-sm font-medium text-red-700 hover:text-red-600"
             >
-              Try again
+              Pokušaj ponovo
             </button>
           </div>
         </div>
@@ -187,8 +188,8 @@ const CustomerEvents = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Browse Events</h1>
-        <p className="mt-1 text-sm text-gray-500">Find and book your perfect event.</p>
+        <h1 className="text-2xl font-semibold text-gray-900">Pregledaj događaje</h1>
+        <p className="mt-1 text-sm text-gray-500">Pronađite i rezervirajte svoj savršeni događaj.</p>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-4">
@@ -198,7 +199,7 @@ const CustomerEvents = () => {
           </div>
           <input
             type="text"
-            placeholder="Search events, locations..."
+            placeholder="Pretraži događaje, lokacije..."
             className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -209,17 +210,17 @@ const CustomerEvents = () => {
           className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
         >
           <Filter className="h-4 w-4 mr-2" />
-          Filters
+          Filteri
         </button>
       </div>
 
       {showFilters && (
         <div className="bg-white p-4 rounded-md shadow">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Filter Options</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Opcije filtera</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label htmlFor="minPrice" className="block text-sm font-medium text-gray-700">
-                Min Price (€)
+                Minimalna cijena (€)
               </label>
               <input
                 type="range"
@@ -236,7 +237,7 @@ const CustomerEvents = () => {
             </div>
             <div>
               <label htmlFor="maxPrice" className="block text-sm font-medium text-gray-700">
-                Max Price (€)
+                Maksimalna cijena (€)
               </label>
               <input
                 type="range"
@@ -253,7 +254,7 @@ const CustomerEvents = () => {
             </div>
             <div>
               <label htmlFor="minCapacity" className="block text-sm font-medium text-gray-700">
-                Min Capacity
+                Minimalni kapacitet
               </label>
               <input
                 type="range"
@@ -266,11 +267,11 @@ const CustomerEvents = () => {
                 onChange={handleFilterChange}
                 className="mt-1 block w-full"
               />
-              <div className="text-sm text-gray-500 mt-1">{filterOptions.minCapacity} people</div>
+              <div className="text-sm text-gray-500 mt-1">{filterOptions.minCapacity} osoba</div>
             </div>
             <div>
               <label htmlFor="maxCapacity" className="block text-sm font-medium text-gray-700">
-                Max Capacity
+                Maksimalni kapacitet
               </label>
               <input
                 type="range"
@@ -283,7 +284,7 @@ const CustomerEvents = () => {
                 onChange={handleFilterChange}
                 className="mt-1 block w-full"
               />
-              <div className="text-sm text-gray-500 mt-1">{filterOptions.maxCapacity} people</div>
+              <div className="text-sm text-gray-500 mt-1">{filterOptions.maxCapacity} osoba</div>
             </div>
           </div>
         </div>
@@ -301,42 +302,57 @@ const CustomerEvents = () => {
                   to={`/customer/events/${event.dogadjajId}`}
                   className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow duration-300"
                 >
-                  <div className="h-40 bg-gray-200 flex items-center justify-center">
-                    <Calendar className="h-12 w-12 text-gray-400" />
+                  <div className="h-40 bg-gray-200 flex items-center justify-center overflow-hidden">
+                    {event.slikaUrl ? (
+                      <img
+                        src={event.slikaUrl || "/placeholder.svg"}
+                        alt={event.naziv}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          // Fallback to icon if image fails to load
+                          const target = e.target as HTMLImageElement
+                          target.style.display = "none"
+                          target.nextElementSibling?.classList.remove("hidden")
+                        }}
+                      />
+                    ) : (
+                      <Calendar className="h-12 w-12 text-gray-400" />
+                    )}
+                    {event.slikaUrl && <Calendar className="h-12 w-12 text-gray-400 hidden" />}
                   </div>
                   <div className="p-4">
                     <h3 className="text-lg font-medium text-indigo-600 truncate">{event.naziv}</h3>
                     <p className="mt-1 text-sm text-gray-500 line-clamp-2">{event.opis}</p>
                     <div className="mt-4 flex items-center">
                       <MapPin className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-400" />
-                      <p className="text-sm text-gray-500 truncate">{event.prostorNaziv || "Unknown venue"}</p>
+                      <p className="text-sm text-gray-500 truncate">{event.prostorNaziv || "Nepoznato mjesto"}</p>
                     </div>
                     <div className="mt-2 flex items-center">
                       <Users className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-400" />
-                      <p className="text-sm text-gray-500">Up to {event.prostorKapacitet || 0} guests</p>
+                      <p className="text-sm text-gray-500">Do {event.prostorKapacitet || 0} gostiju</p>
                     </div>
                     <div className="mt-4 flex justify-between items-center">
                       <div className="text-sm font-medium text-gray-900">
                         {event.ukCijenaFiksna && Number(event.ukCijenaFiksna) > 0 ? (
                           <span className="flex flex-col">
-                            <span>From {calculateMinPrice(event).toFixed(2)} €</span>
+                            <span>Od {calculateMinPrice(event).toFixed(2)} €</span>
                             {event.ukCijenaFiksna && Number(event.ukCijenaFiksna) > 0 && (
                               <span className="text-xs text-gray-500">
-                                Fixed: {formatPrice(event.ukCijenaFiksna)} €
+                                Fiksno: {formatPrice(event.ukCijenaFiksna)} €
                               </span>
                             )}
                             {event.ukCijenaPoOsobi && Number(event.ukCijenaPoOsobi) > 0 && (
                               <span className="text-xs text-gray-500">
-                                Per person: {formatPrice(event.ukCijenaPoOsobi)} €
+                                Po osobi: {formatPrice(event.ukCijenaPoOsobi)} €
                               </span>
                             )}
                           </span>
                         ) : (
-                          <span>From {calculateMinPrice(event).toFixed(2)} €</span>
+                          <span>Od {calculateMinPrice(event).toFixed(2)} €</span>
                         )}
                       </div>
                       <div className="text-xs text-gray-500">
-                        By {event.organizatorIme || "Organizer"} {event.organizatorPrezime || ""}
+                        Od {event.organizatorIme || "Organizator"} {event.organizatorPrezime || ""}
                       </div>
                     </div>
                   </div>
@@ -345,7 +361,9 @@ const CustomerEvents = () => {
             })}
           </>
         ) : (
-          <div className="col-span-full text-center py-12 text-gray-500">No events found matching your criteria.</div>
+          <div className="col-span-full text-center py-12 text-gray-500">
+            Nema pronađenih događaja koji odgovaraju vašim kriterijima.
+          </div>
         )}
       </div>
 
@@ -363,7 +381,7 @@ const CustomerEvents = () => {
             }}
             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
           >
-            Clear all filters
+            Očisti sve filtere
           </button>
         </div>
       )}

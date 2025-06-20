@@ -96,7 +96,7 @@ const OrganizerSpaces = () => {
   }
 
   const handleDelete = async (spaceId: number) => {
-    if (window.confirm("Are you sure you want to delete this space?")) {
+    if (window.confirm("Jeste li sigurni da želite obrisati ovaj prostor?")) {
       try {
         await api.delete(`/prostori/${spaceId}`)
         fetchSpaces()
@@ -127,22 +127,22 @@ const OrganizerSpaces = () => {
   )
 
   if (loading) {
-    return <div className="flex justify-center items-center h-64">Loading...</div>
+    return <div className="flex justify-center items-center h-64">Učitavam...</div>
   }
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Spaces</h1>
-          <p className="mt-1 text-sm text-gray-500">Manage your event spaces and venues.</p>
+          <h1 className="text-2xl font-semibold text-gray-900">Prostori</h1>
+          <p className="mt-1 text-sm text-gray-500">Upravljajte svojim prostorima i mjestima događaja.</p>
         </div>
         <button
           onClick={() => setShowModal(true)}
           className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
         >
           <Plus className="h-4 w-4 mr-2" />
-          New Space
+          Novi prostor
         </button>
       </div>
 
@@ -152,7 +152,7 @@ const OrganizerSpaces = () => {
         </div>
         <input
           type="text"
-          placeholder="Search spaces..."
+          placeholder="Pretraži prostore..."
           className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
@@ -179,7 +179,7 @@ const OrganizerSpaces = () => {
                       <Link
                         to={`/organizer/spaces/${space.prostorId}/time-slots`}
                         className="inline-flex items-center p-2 border border-transparent rounded-full shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                        title="Manage Time Slots"
+                        title="Upravljaj terminima"
                       >
                         <Calendar className="h-4 w-4" />
                       </Link>
@@ -220,7 +220,9 @@ const OrganizerSpaces = () => {
               </li>
             ))
           ) : (
-            <li className="px-4 py-6 text-center text-gray-500">No spaces found. Create your first space!</li>
+            <li className="px-4 py-6 text-center text-gray-500">
+              Nema pronađenih prostora. Stvorite svoj prvi prostor!
+            </li>
           )}
         </ul>
       </div>
@@ -243,12 +245,12 @@ const OrganizerSpaces = () => {
                   <div className="sm:flex sm:items-start">
                     <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
                       <h3 className="text-lg leading-6 font-medium text-gray-900">
-                        {editingSpace ? "Edit Space" : "Create New Space"}
+                        {editingSpace ? "Uredi prostor" : "Stvori novi prostor"}
                       </h3>
                       <div className="mt-4 space-y-4">
                         <div>
                           <label htmlFor="naziv" className="block text-sm font-medium text-gray-700">
-                            Space Name
+                            Naziv prostora
                           </label>
                           <input
                             type="text"
@@ -262,7 +264,7 @@ const OrganizerSpaces = () => {
                         </div>
                         <div>
                           <label htmlFor="opis" className="block text-sm font-medium text-gray-700">
-                            Description
+                            Opis
                           </label>
                           <textarea
                             name="opis"
@@ -275,7 +277,7 @@ const OrganizerSpaces = () => {
                         </div>
                         <div>
                           <label htmlFor="adresa" className="block text-sm font-medium text-gray-700">
-                            Address
+                            Adresa
                           </label>
                           <input
                             type="text"
@@ -290,7 +292,7 @@ const OrganizerSpaces = () => {
                         <div className="grid grid-cols-2 gap-4">
                           <div>
                             <label htmlFor="cijena" className="block text-sm font-medium text-gray-700">
-                              Price (€)
+                              Cijena (€)
                             </label>
                             <input
                               type="number"
@@ -306,7 +308,7 @@ const OrganizerSpaces = () => {
                           </div>
                           <div>
                             <label htmlFor="kapacitet" className="block text-sm font-medium text-gray-700">
-                              Capacity
+                              Kapacitet
                             </label>
                             <input
                               type="number"
@@ -329,14 +331,14 @@ const OrganizerSpaces = () => {
                     type="submit"
                     className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm"
                   >
-                    {editingSpace ? "Update" : "Create"}
+                    {editingSpace ? "Ažuriraj" : "Stvori"}
                   </button>
                   <button
                     type="button"
                     onClick={resetForm}
                     className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
                   >
-                    Cancel
+                    Odustani
                   </button>
                 </div>
               </form>

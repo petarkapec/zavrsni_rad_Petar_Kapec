@@ -83,8 +83,8 @@ const CustomerReservations = () => {
             console.error(`Error enhancing reservation ${reservation.rezervacijaId}:`, error)
             return {
               ...reservation,
-              dogadjaj_naziv: "Unknown event",
-              prostor_naziv: "Unknown venue",
+              dogadjaj_naziv: "Nepoznat događaj",
+              prostor_naziv: "Nepoznato mjesto",
               datum_pocetka: new Date().toISOString(),
               datum_zavrsetka: new Date().toISOString(),
               broj_gostiju: 0,
@@ -96,21 +96,21 @@ const CustomerReservations = () => {
       setReservations(enhancedReservations)
     } catch (error) {
       console.error("Failed to fetch reservations:", error)
-      setError("Failed to load your reservations. Please try again later.")
+      setError("Neuspješno učitavanje vaših rezervacija. Molimo pokušajte kasnije.")
     } finally {
       setLoading(false)
     }
   }
 
   const handleCancelReservation = async (id: number) => {
-    if (window.confirm("Are you sure you want to cancel this reservation?")) {
+    if (window.confirm("Jeste li sigurni da želite otkazati ovu rezervaciju?")) {
       try {
         setLoading(true)
         await api.put(`/rezervacije/${id}/otkazi`)
         fetchReservations() // Refresh the list
       } catch (error) {
         console.error("Failed to cancel reservation:", error)
-        setError("Failed to cancel the reservation. Please try again.")
+        setError("Neuspješno otkazivanje rezervacije. Molimo pokušajte ponovo.")
       } finally {
         setLoading(false)
       }
@@ -124,7 +124,7 @@ const CustomerReservations = () => {
       fetchReservations() // Refresh the list
     } catch (error) {
       console.error("Failed to process payment:", error)
-      setError("Failed to process payment. Please try again.")
+      setError("Neuspješno procesiranje plaćanja. Molimo pokušajte ponovo.")
     } finally {
       setLoading(false)
     }
@@ -141,7 +141,7 @@ const CustomerReservations = () => {
       const date = new Date(dateString)
       return date.toLocaleDateString() + " " + date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
     } catch (e) {
-      return "Invalid date"
+      return "Neispravan datum"
     }
   }
 
@@ -159,21 +159,21 @@ const CustomerReservations = () => {
         return (
           <span className="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800 flex items-center">
             <Clock className="h-3 w-3 mr-1" />
-            Awaiting Payment
+            Čeka plaćanje
           </span>
         )
       case "PLACENO":
         return (
           <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800 flex items-center">
             <Check className="h-3 w-3 mr-1" />
-            Paid
+            Plaćeno
           </span>
         )
       case "OTKAZANO":
         return (
           <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800 flex items-center">
             <X className="h-3 w-3 mr-1" />
-            Cancelled
+            Otkazano
           </span>
         )
       default:
@@ -182,14 +182,14 @@ const CustomerReservations = () => {
   }
 
   if (loading && reservations.length === 0) {
-    return <div className="flex justify-center items-center h-64">Loading your reservations...</div>
+    return <div className="flex justify-center items-center h-64">Učitavam vaše rezervacije...</div>
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-gray-900">My Reservations</h1>
-        <p className="mt-1 text-sm text-gray-500">Manage your upcoming and past reservations.</p>
+        <h1 className="text-2xl font-semibold text-gray-900">Moje rezervacije</h1>
+        <p className="mt-1 text-sm text-gray-500">Upravljajte svojim nadolazećim i prošlim rezervacijama.</p>
       </div>
 
       {error && (
@@ -215,7 +215,7 @@ const CustomerReservations = () => {
                 : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
             } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
           >
-            Upcoming ({upcomingReservations.length})
+            Nadolazeće ({upcomingReservations.length})
           </button>
           <button
             onClick={() => setActiveTab("past")}
@@ -225,7 +225,7 @@ const CustomerReservations = () => {
                 : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
             } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
           >
-            Past ({pastReservations.length})
+            Prošle ({pastReservations.length})
           </button>
         </nav>
       </div>
@@ -246,7 +246,7 @@ const CustomerReservations = () => {
                           {reservation.dogadjaj_naziv || `Event #${reservation.dogadjaj}`}
                         </p>
                         <p className="text-sm text-gray-500">
-                          {reservation.prostor_naziv || "Venue details loading..."}
+                          {reservation.prostor_naziv || "Učitavam detalje mjesta..."}
                         </p>
                       </div>
                     </div>
@@ -262,7 +262,7 @@ const CustomerReservations = () => {
                     <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
                       <div className="flex space-x-2">
                         <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
-                          {reservation.broj_gostiju || 0} guests
+                          {reservation.broj_gostiju || 0} gosta
                         </span>
                         <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
                           {Number(reservation.ukupnaCijena).toFixed(2)} €
@@ -273,7 +273,7 @@ const CustomerReservations = () => {
                   {reservation.posebniZahtjevi && (
                     <div className="mt-2 flex items-center text-sm text-gray-500">
                       <AlertTriangle className="flex-shrink-0 mr-1.5 h-4 w-4 text-yellow-400" />
-                      <p>Special requests: {reservation.posebniZahtjevi}</p>
+                      <p>Posebni zahtjevi: {reservation.posebniZahtjevi}</p>
                     </div>
                   )}
                   <div className="mt-4 flex justify-between items-center">
@@ -282,7 +282,7 @@ const CustomerReservations = () => {
                       className="inline-flex items-center text-sm text-indigo-600 hover:text-indigo-500"
                     >
                       <List className="h-4 w-4 mr-1" />
-                      Guest List
+                      Lista gostiju
                     </button>
                     {activeTab === "upcoming" && reservation.status !== "OTKAZANO" && (
                       <div className="flex space-x-3">
@@ -291,14 +291,14 @@ const CustomerReservations = () => {
                             onClick={() => handlePayReservation(reservation.rezervacijaId)}
                             className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                           >
-                            Pay Now
+                            Plati sada
                           </button>
                         )}
                         <button
                           onClick={() => handleCancelReservation(reservation.rezervacijaId)}
                           className="inline-flex items-center px-3 py-1 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                         >
-                          Cancel
+                          Odustani
                         </button>
                       </div>
                     )}
@@ -308,9 +308,7 @@ const CustomerReservations = () => {
             ))
           ) : (
             <li className="px-4 py-6 text-center text-gray-500">
-              {activeTab === "upcoming"
-                ? "You don't have any upcoming reservations."
-                : "You don't have any past reservations."}
+              {activeTab === "upcoming" ? "Nemate nadolazećih rezervacija." : "Nemate prošlih rezervacija."}
             </li>
           )}
         </ul>
@@ -333,9 +331,9 @@ const CustomerReservations = () => {
                 <div className="sm:flex sm:items-start">
                   <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
                     <div className="flex justify-between items-center">
-                      <h3 className="text-lg leading-6 font-medium text-gray-900">Guest List</h3>
+                      <h3 className="text-lg leading-6 font-medium text-gray-900">Lista gostiju</h3>
                       <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
-                        {selectedReservation.gosti ? selectedReservation.gosti.length : 0} guests
+                        {selectedReservation.gosti ? selectedReservation.gosti.length : 0} gosta
                       </span>
                     </div>
                     <div className="mt-4">
@@ -351,14 +349,14 @@ const CustomerReservations = () => {
                                     </p>
                                     <p className="text-sm text-gray-500">{guest.email}</p>
                                   </div>
-                                  <div className="text-xs text-gray-500">Guest #{index + 1}</div>
+                                  <div className="text-xs text-gray-500">Gost #{index + 1}</div>
                                 </div>
                               </li>
                             ))}
                           </ul>
                         </div>
                       ) : (
-                        <div className="text-center py-6 text-gray-500">No guest information available</div>
+                        <div className="text-center py-6 text-gray-500">Nema dostupnih informacija o gostima</div>
                       )}
                     </div>
                   </div>
@@ -370,7 +368,7 @@ const CustomerReservations = () => {
                   onClick={() => setShowGuestListModal(false)}
                   className="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm"
                 >
-                  Close
+                  Zatvori
                 </button>
               </div>
             </div>
@@ -394,7 +392,7 @@ const CustomerReservations = () => {
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               ></path>
             </svg>
-            Updating...
+            Ažuriram...
           </div>
         </div>
       )}

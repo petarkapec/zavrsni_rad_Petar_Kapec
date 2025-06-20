@@ -8,6 +8,7 @@ type Reservation = {
   rezervacijaId: number
   dogadjajNaziv: string
   prostorNaziv: string
+  prostorDetalji?: any
   korisnikIme: string
   korisnikPrezime: string
   korisnikEmail: string
@@ -31,6 +32,7 @@ const OrganizerReservations = () => {
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null)
   const [showDetailsModal, setShowDetailsModal] = useState(false)
   const [showGuestListModal, setShowGuestListModal] = useState(false)
+  const [showSpaceDetailsModal, setShowSpaceDetailsModal] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   // Update the fetchReservations function to also fetch event and time slot data
@@ -50,6 +52,19 @@ const OrganizerReservations = () => {
             const eventResponse = await api.get(`/rezervacije/${reservation.rezervacijaId}/dogadjaj`)
             const event = eventResponse.data
 
+            // Fetch space details if event has prostorId
+            let prostorNaziv = "Nepoznato mjesto"
+            let prostorDetalji = null
+            if (event.prostorId) {
+              try {
+                const prostorResponse = await api.get(`/prostori/${event.prostorId}`)
+                prostorDetalji = prostorResponse.data
+                prostorNaziv = prostorDetalji.naziv
+              } catch (e) {
+                console.error("Error fetching space details:", e)
+              }
+            }
+
             // Fetch time slot details
             const terminResponse = await api.get(`/rezervacije/${reservation.rezervacijaId}/termin`)
             const termin = terminResponse.data
@@ -63,7 +78,8 @@ const OrganizerReservations = () => {
             return {
               ...reservation,
               dogadjajNaziv: event.naziv || "Unknown Event",
-              prostorNaziv: event.prostorNaziv || "Unknown Venue",
+              prostorNaziv: prostorNaziv,
+              prostorDetalji: prostorDetalji,
               datumPocetka: termin.datumPocetka || new Date().toISOString(),
               datumZavrsetka: termin.datumZavrsetka || new Date().toISOString(),
               brojGostiju: reservation.gosti.length,
@@ -75,6 +91,7 @@ const OrganizerReservations = () => {
               ...reservation,
               dogadjajNaziv: "Unknown Event",
               prostorNaziv: "Unknown Venue",
+              prostorDetalji: null,
               datumPocetka: new Date().toISOString(),
               datumZavrsetka: new Date().toISOString(),
               brojGostiju: reservation.gosti ? reservation.gosti.length : 0,
@@ -87,7 +104,7 @@ const OrganizerReservations = () => {
       setReservations(enhancedReservations)
     } catch (error) {
       console.error("Failed to fetch reservations", error)
-      setError("Failed to load reservations. Please try again.")
+      setError("Neuspješno učitavanje rezervacija. Molimo pokušajte ponovo.")
     } finally {
       setLoading(false)
     }
@@ -98,14 +115,14 @@ const OrganizerReservations = () => {
   }, [])
 
   const handleCancelReservation = async (id: number) => {
-    if (window.confirm("Are you sure you want to cancel this reservation?")) {
+    if (window.confirm("Jeste li sigurni da želite otkazati ovu rezervaciju?")) {
       try {
         setLoading(true)
         await api.put(`/rezervacije/${id}/cancel`)
         fetchReservations()
       } catch (error) {
         console.error("Failed to cancel reservation", error)
-        setError("Failed to cancel the reservation. Please try again.")
+        setError("Neuspješno otkazivanje rezervacije. Molimo pokušajte ponovo.")
       } finally {
         setLoading(false)
       }
@@ -119,7 +136,7 @@ const OrganizerReservations = () => {
       fetchReservations()
     } catch (error) {
       console.error("Failed to confirm reservation", error)
-      setError("Failed to confirm the reservation. Please try again.")
+      setError("Neuspješno potvrđivanje rezervacije. Molimo pokušajte ponovo.")
     } finally {
       setLoading(false)
     }
@@ -140,21 +157,21 @@ const OrganizerReservations = () => {
         return (
           <span className="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800 flex items-center">
             <Clock className="h-3 w-3 mr-1" />
-            Pending
+            Na čekanju
           </span>
         )
       case "PLACENO":
         return (
           <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800 flex items-center">
             <Check className="h-3 w-3 mr-1" />
-            Paid
+            Plaćeno
           </span>
         )
       case "OTKAZANO":
         return (
           <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800 flex items-center">
             <X className="h-3 w-3 mr-1" />
-            Cancelled
+            Otkazano
           </span>
         )
       default:
@@ -185,15 +202,20 @@ const OrganizerReservations = () => {
     setShowGuestListModal(true)
   }
 
+  const showSpaceDetails = (reservation: Reservation) => {
+    setSelectedReservation(reservation)
+    setShowSpaceDetailsModal(true)
+  }
+
   if (loading && reservations.length === 0) {
-    return <div className="flex justify-center items-center h-64">Loading reservations...</div>
+    return <div className="flex justify-center items-center h-64">Učitavam rezervacije...</div>
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Reservations</h1>
-        <p className="mt-1 text-sm text-gray-500">Manage all reservations for your events.</p>
+        <h1 className="text-2xl font-semibold text-gray-900">Rezervacije</h1>
+        <p className="mt-1 text-sm text-gray-500">Upravljajte svim rezervacijama svojih događaja.</p>
       </div>
 
       {error && (
@@ -219,7 +241,7 @@ const OrganizerReservations = () => {
                 : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
             } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
           >
-            All ({reservations.length})
+            Sve ({reservations.length})
           </button>
           <button
             onClick={() => setActiveTab("pending")}
@@ -229,7 +251,7 @@ const OrganizerReservations = () => {
                 : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
             } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
           >
-            Pending ({reservations.filter((r) => r.status === "CEKA_POTVRDU").length})
+            Na čekanju ({reservations.filter((r) => r.status === "CEKA_POTVRDU").length})
           </button>
           <button
             onClick={() => setActiveTab("paid")}
@@ -239,7 +261,7 @@ const OrganizerReservations = () => {
                 : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
             } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
           >
-            Paid ({reservations.filter((r) => r.status === "PLACENO").length})
+            Plaćeno ({reservations.filter((r) => r.status === "PLACENO").length})
           </button>
           <button
             onClick={() => setActiveTab("cancelled")}
@@ -249,7 +271,7 @@ const OrganizerReservations = () => {
                 : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
             } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
           >
-            Cancelled ({reservations.filter((r) => r.status === "OTKAZANO").length})
+            Otkazano ({reservations.filter((r) => r.status === "OTKAZANO").length})
           </button>
         </nav>
       </div>
@@ -282,7 +304,12 @@ const OrganizerReservations = () => {
                       </p>
                       <p className="flex items-center text-sm text-gray-500">
                         <MapPin className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-400" />
-                        {reservation.prostorNaziv}
+                        <button
+                          onClick={() => showSpaceDetails(reservation)}
+                          className="text-indigo-600 hover:text-indigo-500 underline"
+                        >
+                          {reservation.prostorNaziv}
+                        </button>
                       </p>
                     </div>
                     <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
@@ -300,7 +327,7 @@ const OrganizerReservations = () => {
                   {reservation.posebniZahtjevi && (
                     <div className="mt-2 flex items-center text-sm text-gray-500">
                       <AlertTriangle className="flex-shrink-0 mr-1.5 h-4 w-4 text-yellow-400" />
-                      <p>Special requests: {reservation.posebniZahtjevi}</p>
+                      <p>Posebni zahtjevi: {reservation.posebniZahtjevi}</p>
                     </div>
                   )}
                   <div className="mt-4 flex justify-between items-center">
@@ -309,14 +336,14 @@ const OrganizerReservations = () => {
                         onClick={() => showReservationDetails(reservation)}
                         className="text-sm text-indigo-600 hover:text-indigo-500"
                       >
-                        View Details
+                        Prikaži detalje
                       </button>
                       <button
                         onClick={() => showGuestList(reservation)}
                         className="inline-flex items-center text-sm text-indigo-600 hover:text-indigo-500"
                       >
                         <List className="h-4 w-4 mr-1" />
-                        Guest List
+                        Lista gostiju
                       </button>
                     </div>
                     <div className="flex space-x-3">
@@ -325,7 +352,7 @@ const OrganizerReservations = () => {
                           onClick={() => handleConfirmReservation(reservation.rezervacijaId)}
                           className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                         >
-                          Confirm
+                          Potvrdi
                         </button>
                       )}
                       {reservation.status !== "OTKAZANO" && (
@@ -333,7 +360,7 @@ const OrganizerReservations = () => {
                           onClick={() => handleCancelReservation(reservation.rezervacijaId)}
                           className="inline-flex items-center px-3 py-1 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                         >
-                          Cancel
+                          Odustani
                         </button>
                       )}
                     </div>
@@ -342,7 +369,7 @@ const OrganizerReservations = () => {
               </li>
             ))
           ) : (
-            <li className="px-4 py-6 text-center text-gray-500">No reservations found for the selected filter.</li>
+            <li className="px-4 py-6 text-center text-gray-500">Nema pronađenih rezervacija za odabrani filter.</li>
           )}
         </ul>
       </div>
@@ -363,32 +390,32 @@ const OrganizerReservations = () => {
               <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                 <div className="sm:flex sm:items-start">
                   <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                    <h3 className="text-lg leading-6 font-medium text-gray-900">Reservation Details</h3>
+                    <h3 className="text-lg leading-6 font-medium text-gray-900">Detalji rezervacije</h3>
                     <div className="mt-4 space-y-4">
                       <div>
-                        <h4 className="text-sm font-medium text-gray-700">Event</h4>
+                        <h4 className="text-sm font-medium text-gray-700">Događaj</h4>
                         <p className="text-sm text-gray-900">{selectedReservation.dogadjajNaziv}</p>
                       </div>
                       <div>
-                        <h4 className="text-sm font-medium text-gray-700">Customer</h4>
+                        <h4 className="text-sm font-medium text-gray-700">Kupac</h4>
                         <p className="text-sm text-gray-900">
                           {selectedReservation.korisnikIme} {selectedReservation.korisnikPrezime}
                         </p>
                         <p className="text-sm text-gray-500">{selectedReservation.korisnikEmail}</p>
                       </div>
                       <div>
-                        <h4 className="text-sm font-medium text-gray-700">Date & Time</h4>
+                        <h4 className="text-sm font-medium text-gray-700">Datum i vrijeme</h4>
                         <p className="text-sm text-gray-900">
                           {formatDate(selectedReservation.datumPocetka)} -{" "}
                           {formatDate(selectedReservation.datumZavrsetka)}
                         </p>
                       </div>
                       <div>
-                        <h4 className="text-sm font-medium text-gray-700">Location</h4>
+                        <h4 className="text-sm font-medium text-gray-700">Lokacija</h4>
                         <p className="text-sm text-gray-900">{selectedReservation.prostorNaziv}</p>
                       </div>
                       <div>
-                        <h4 className="text-sm font-medium text-gray-700">Total Price</h4>
+                        <h4 className="text-sm font-medium text-gray-700">Ukupna cijena</h4>
                         <p className="text-sm text-gray-900">{selectedReservation.ukupnaCijena} €</p>
                       </div>
                       <div>
@@ -397,13 +424,13 @@ const OrganizerReservations = () => {
                       </div>
                       {selectedReservation.posebniZahtjevi && (
                         <div>
-                          <h4 className="text-sm font-medium text-gray-700">Special Requests</h4>
+                          <h4 className="text-sm font-medium text-gray-700">Posebni zahtjevi</h4>
                           <p className="text-sm text-gray-900">{selectedReservation.posebniZahtjevi}</p>
                         </div>
                       )}
                       <div>
                         <h4 className="text-sm font-medium text-gray-700">
-                          Guest List ({selectedReservation.brojGostiju} guests)
+                          Lista gostiju ({selectedReservation.brojGostiju} gostiju)
                         </h4>
                         <div className="mt-2 max-h-40 overflow-y-auto">
                           <ul className="divide-y divide-gray-200">
@@ -417,7 +444,7 @@ const OrganizerReservations = () => {
                                 </li>
                               ))
                             ) : (
-                              <li className="py-2 text-sm text-gray-500">No guest information available</li>
+                              <li className="py-2 text-sm text-gray-500">Nema dostupnih informacija o gostima</li>
                             )}
                           </ul>
                         </div>
@@ -432,7 +459,7 @@ const OrganizerReservations = () => {
                   onClick={() => setShowDetailsModal(false)}
                   className="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm"
                 >
-                  Close
+                  Zatvori
                 </button>
               </div>
             </div>
@@ -457,9 +484,9 @@ const OrganizerReservations = () => {
                 <div className="sm:flex sm:items-start">
                   <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
                     <div className="flex justify-between items-center">
-                      <h3 className="text-lg leading-6 font-medium text-gray-900">Guest List</h3>
+                      <h3 className="text-lg leading-6 font-medium text-gray-900">Lista gostiju</h3>
                       <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
-                        {selectedReservation.gosti ? selectedReservation.gosti.length : 0} guests
+                        {selectedReservation.gosti ? selectedReservation.gosti.length : 0} gostiju
                       </span>
                     </div>
                     <div className="mt-4">
@@ -475,14 +502,14 @@ const OrganizerReservations = () => {
                                     </p>
                                     <p className="text-sm text-gray-500">{guest.email}</p>
                                   </div>
-                                  <div className="text-xs text-gray-500">Guest #{index + 1}</div>
+                                  <div className="text-xs text-gray-500">Gost #{index + 1}</div>
                                 </div>
                               </li>
                             ))}
                           </ul>
                         </div>
                       ) : (
-                        <div className="text-center py-6 text-gray-500">No guest information available</div>
+                        <div className="text-center py-6 text-gray-500">Nema dostupnih informacija o gostima</div>
                       )}
                     </div>
                   </div>
@@ -494,7 +521,71 @@ const OrganizerReservations = () => {
                   onClick={() => setShowGuestListModal(false)}
                   className="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm"
                 >
-                  Close
+                  Zatvori
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Space Details Modal */}
+      {showSpaceDetailsModal && selectedReservation && selectedReservation.prostorDetalji && (
+        <div className="fixed z-10 inset-0 overflow-y-auto">
+          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+              <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+
+            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">
+              &#8203;
+            </span>
+
+            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+              <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div className="sm:flex sm:items-start">
+                  <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                    <h3 className="text-lg leading-6 font-medium text-gray-900">Detalji prostora</h3>
+                    <div className="mt-4 space-y-4">
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-700">Naziv</h4>
+                        <p className="text-sm text-gray-900">{selectedReservation.prostorDetalji.naziv}</p>
+                      </div>
+                      {selectedReservation.prostorDetalji.opis && (
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-700">Opis</h4>
+                          <p className="text-sm text-gray-900">{selectedReservation.prostorDetalji.opis}</p>
+                        </div>
+                      )}
+                      {selectedReservation.prostorDetalji.kapacitet && (
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-700">Kapacitet</h4>
+                          <p className="text-sm text-gray-900">{selectedReservation.prostorDetalji.kapacitet} osoba</p>
+                        </div>
+                      )}
+                      {selectedReservation.prostorDetalji.adresa && (
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-700">Adresa</h4>
+                          <p className="text-sm text-gray-900">{selectedReservation.prostorDetalji.adresa}</p>
+                        </div>
+                      )}
+                      {selectedReservation.prostorDetalji.cijena && (
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-700">Cijena najma</h4>
+                          <p className="text-sm text-gray-900">{selectedReservation.prostorDetalji.cijena} €</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button
+                  type="button"
+                  onClick={() => setShowSpaceDetailsModal(false)}
+                  className="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm"
+                >
+                  Zatvori
                 </button>
               </div>
             </div>
@@ -518,7 +609,7 @@ const OrganizerReservations = () => {
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               ></path>
             </svg>
-            Updating...
+            Ažuriram...
           </div>
         </div>
       )}

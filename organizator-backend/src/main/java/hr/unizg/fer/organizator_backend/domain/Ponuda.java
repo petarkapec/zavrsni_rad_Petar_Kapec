@@ -8,7 +8,7 @@ import java.util.Set;
 
 @Entity
 public class Ponuda {
-
+    //Ponuda
     @Id
     @Column(nullable = false, updatable = false)
     @SequenceGenerator(

@@ -42,14 +42,14 @@ const CustomerDashboard = () => {
   }, [])
 
   if (loading) {
-    return <div className="flex justify-center items-center h-64">Loading...</div>
+    return <div className="flex justify-center items-center h-64">Učitavam...</div>
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Customer Dashboard</h1>
-        <p className="mt-1 text-sm text-gray-500">Overview of your reservations and upcoming events.</p>
+        <h1 className="text-2xl font-semibold text-gray-900">Nadzorna ploča kupca</h1>
+        <p className="mt-1 text-sm text-gray-500">Pregled vaših rezervacija i nadolazećih događaja.</p>
       </div>
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
@@ -61,7 +61,7 @@ const CustomerDashboard = () => {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">My Reservations</dt>
+                  <dt className="text-sm font-medium text-gray-500 truncate">Moje rezervacije</dt>
                   <dd>
                     <div className="text-lg font-medium text-gray-900">{stats.totalReservations}</div>
                   </dd>
@@ -72,7 +72,7 @@ const CustomerDashboard = () => {
           <div className="bg-gray-50 px-5 py-3">
             <div className="text-sm">
               <Link to="/customer/reservations" className="font-medium text-indigo-600 hover:text-indigo-500">
-                View all
+                Prikaži sve
               </Link>
             </div>
           </div>
@@ -86,7 +86,7 @@ const CustomerDashboard = () => {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Upcoming Events</dt>
+                  <dt className="text-sm font-medium text-gray-500 truncate">Nadolazeći događaji</dt>
                   <dd>
                     <div className="text-lg font-medium text-gray-900">{stats.upcomingEvents}</div>
                   </dd>
@@ -97,7 +97,7 @@ const CustomerDashboard = () => {
           <div className="bg-gray-50 px-5 py-3">
             <div className="text-sm">
               <Link to="/customer/events" className="font-medium text-indigo-600 hover:text-indigo-500">
-                Browse events
+                Pregledaj događaje
               </Link>
             </div>
           </div>
@@ -106,8 +106,8 @@ const CustomerDashboard = () => {
 
       <div className="bg-white shadow overflow-hidden sm:rounded-lg">
         <div className="px-4 py-5 sm:px-6">
-          <h3 className="text-lg leading-6 font-medium text-gray-900">Featured Events</h3>
-          <p className="mt-1 max-w-2xl text-sm text-gray-500">Check out these popular events.</p>
+          <h3 className="text-lg leading-6 font-medium text-gray-900">Istaknuti događaji</h3>
+          <p className="mt-1 max-w-2xl text-sm text-gray-500">Pogledajte ove popularne događaje.</p>
         </div>
         <div className="border-t border-gray-200">
           <ul className="divide-y divide-gray-200">
@@ -124,7 +124,7 @@ const CustomerDashboard = () => {
                           <p className="text-sm font-medium text-indigo-600 truncate">{event.naziv}</p>
                           <div className="ml-2 flex-shrink-0 flex">
                             <p className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                              From {event.uk_cijena_fiksna + event.uk_cijena_po_osobi} €
+                              Od {event.uk_cijena_fiksna + event.uk_cijena_po_osobi} €
                             </p>
                           </div>
                         </div>
@@ -134,7 +134,7 @@ const CustomerDashboard = () => {
                           </div>
                           <div className="flex items-center text-sm text-gray-500">
                             <Clock className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-400" />
-                            <p>Book now</p>
+                            <p>Rezerviraj sada</p>
                           </div>
                         </div>
                       </div>
@@ -143,7 +143,7 @@ const CustomerDashboard = () => {
                 </li>
               ))
             ) : (
-              <li className="px-4 py-5 text-center text-gray-500">No featured events available.</li>
+              <li className="px-4 py-5 text-center text-gray-500">Nema dostupnih istaknutih događaja.</li>
             )}
           </ul>
         </div>
@@ -152,7 +152,7 @@ const CustomerDashboard = () => {
             to="/customer/events"
             className="w-full flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
           >
-            Browse All Events
+            Pregledaj sve događaje
           </Link>
         </div>
       </div>

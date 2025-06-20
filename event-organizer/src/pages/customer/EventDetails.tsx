@@ -22,6 +22,7 @@ type Event = {
   prostorKapacitet: number
   organizatorIme: string
   organizatorPrezime: string
+  slikaUrl?: string
 }
 
 type Offer = {
@@ -220,38 +221,54 @@ const EventDetails = () => {
   }
 
   if (loading) {
-    return <div className="flex justify-center items-center h-64">Loading...</div>
+    return <div className="flex justify-center items-center h-64">Učitavam...</div>
   }
 
   if (!event) {
-    return <div className="text-center py-12">Event not found.</div>
+    return <div className="text-center py-12">Događaj nije pronađen.</div>
   }
 
   return (
     <div className="space-y-6">
       <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+        {/* Event Image Header */}
+        {event.slikaUrl && (
+          <div className="h-64 w-full overflow-hidden">
+            <img
+              src={event.slikaUrl || "/placeholder.svg"}
+              alt={event.naziv}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                // Hide image container if image fails to load
+                const target = e.target as HTMLImageElement
+                target.parentElement!.style.display = "none"
+              }}
+            />
+          </div>
+        )}
+
         <div className="px-4 py-5 sm:px-6 flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">{event.naziv}</h1>
             <p className="mt-1 max-w-2xl text-sm text-gray-500">
-              Organized by {event.organizatorIme} {event.organizatorPrezime}
+              Organizira {event.organizatorIme} {event.organizatorPrezime}
             </p>
           </div>
           <button
             onClick={() => setShowReservationModal(true)}
             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
           >
-            Book Now
+            Rezerviraj sada
           </button>
         </div>
         <div className="border-t border-gray-200">
           <dl>
             <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-              <dt className="text-sm font-medium text-gray-500">Description</dt>
+              <dt className="text-sm font-medium text-gray-500">Opis</dt>
               <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{event.opis}</dd>
             </div>
             <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-              <dt className="text-sm font-medium text-gray-500">Location</dt>
+              <dt className="text-sm font-medium text-gray-500">Lokacija</dt>
               <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
                 <div className="flex items-center">
                   <MapPin className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-400" />
@@ -260,39 +277,39 @@ const EventDetails = () => {
               </dd>
             </div>
             <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-              <dt className="text-sm font-medium text-gray-500">Capacity</dt>
+              <dt className="text-sm font-medium text-gray-500">Kapacitet</dt>
               <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
                 <div className="flex items-center">
                   <Users className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-400" />
-                  Up to {event.prostorKapacitet} guests
+                  Do {event.prostorKapacitet} gostiju
                 </div>
               </dd>
             </div>
             <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-              <dt className="text-sm font-medium text-gray-500">Pricing</dt>
+              <dt className="text-sm font-medium text-gray-500">Cijene</dt>
               <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span>Fixed price:</span>
+                    <span>Fiksna cijena:</span>
                     <span>{formatPrice(event.ukCijenaFiksna)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Price per person:</span>
+                    <span>Cijena po osobi:</span>
                     <span>{formatPrice(event.ukCijenaPoOsobi)}</span>
                   </div>
                   <div className="pt-2 border-t border-gray-200 flex justify-between font-medium">
-                    <span>Starting from:</span>
+                    <span>Počevši od:</span>
                     <span>{formatPrice(Number(event.ukCijenaFiksna || 0) + Number(event.ukCijenaPoOsobi || 0))}</span>
                   </div>
                 </div>
               </dd>
             </div>
             <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-              <dt className="text-sm font-medium text-gray-500">Cancellation Policy</dt>
+              <dt className="text-sm font-medium text-gray-500">Pravila otkazivanja</dt>
               <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
                 <div className="flex items-center">
                   <Clock className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-400" />
-                  {event.otkazniRok} days before the event
+                  {event.otkazniRok} dana prije događaja
                 </div>
               </dd>
             </div>
@@ -302,8 +319,8 @@ const EventDetails = () => {
 
       <div className="bg-white shadow overflow-hidden sm:rounded-lg">
         <div className="px-4 py-5 sm:px-6">
-          <h2 className="text-lg font-medium text-gray-900">Included Offers</h2>
-          <p className="mt-1 max-w-2xl text-sm text-gray-500">Services and items included in this event.</p>
+          <h2 className="text-lg font-medium text-gray-900">Uključene ponude</h2>
+          <p className="mt-1 max-w-2xl text-sm text-gray-500">Usluge i stavke uključene u ovaj događaj.</p>
         </div>
         <div className="border-t border-gray-200">
           <ul className="divide-y divide-gray-200">
@@ -327,7 +344,7 @@ const EventDetails = () => {
                 </li>
               ))
             ) : (
-              <li className="px-4 py-5 text-center text-gray-500">No offers available for this event.</li>
+              <li className="px-4 py-5 text-center text-gray-500">Nema dostupnih ponuda za ovaj događaj.</li>
             )}
           </ul>
         </div>
@@ -335,8 +352,8 @@ const EventDetails = () => {
 
       <div className="bg-white shadow overflow-hidden sm:rounded-lg">
         <div className="px-4 py-5 sm:px-6">
-          <h2 className="text-lg font-medium text-gray-900">Available Dates</h2>
-          <p className="mt-1 max-w-2xl text-sm text-gray-500">Select a date for your reservation.</p>
+          <h2 className="text-lg font-medium text-gray-900">Dostupni datumi</h2>
+          <p className="mt-1 max-w-2xl text-sm text-gray-500">Odaberite datum za svoju rezervaciju.</p>
         </div>
         <div className="border-t border-gray-200">
           <div className="p-4">
@@ -354,7 +371,7 @@ const EventDetails = () => {
             {selectedDate && (
               <div className="mt-4">
                 <h3 className="text-md font-medium text-gray-900 mb-2">
-                  Available time slots for {format(selectedDate, "MMMM d, yyyy")}
+                  Dostupni termini za {format(selectedDate, "MMMM d, yyyy")}
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
                   {getTimeSlotsForDate(selectedDate).map((termin) => (
@@ -379,7 +396,7 @@ const EventDetails = () => {
                     </div>
                   ))}
                   {getTimeSlotsForDate(selectedDate).length === 0 && (
-                    <p className="text-sm text-gray-500 col-span-full">No available time slots for this date.</p>
+                    <p className="text-sm text-gray-500 col-span-full">Nema dostupnih termina za ovaj datum.</p>
                   )}
                 </div>
               </div>
@@ -391,7 +408,7 @@ const EventDetails = () => {
                 disabled={!selectedTermin}
                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {selectedTermin ? "Continue with Selected Time" : "Select a Time Slot"}
+                {selectedTermin ? "Nastavi s odabranim vremenom" : "Odaberite termin"}
               </button>
             </div>
           </div>
@@ -416,11 +433,11 @@ const EventDetails = () => {
                   <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                     <div className="sm:flex sm:items-start">
                       <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                        <h3 className="text-lg leading-6 font-medium text-gray-900">Make a Reservation</h3>
+                        <h3 className="text-lg leading-6 font-medium text-gray-900">Napravite rezervaciju</h3>
                         <div className="mt-4 space-y-4">
                           {/* Selected Time Slot */}
                           <div>
-                            <label className="block text-sm font-medium text-gray-700">Selected Date & Time</label>
+                            <label className="block text-sm font-medium text-gray-700">Odabrani datum i vrijeme</label>
                             {selectedTermin ? (
                               <div className="mt-1 p-3 border border-gray-300 rounded-md bg-gray-50">
                                 <div className="flex items-center">
@@ -439,7 +456,7 @@ const EventDetails = () => {
                               </div>
                             ) : (
                               <div className="mt-1 p-3 border border-red-300 rounded-md bg-red-50 text-red-700">
-                                Please select a time slot first
+                                Molimo prvo odaberite termin
                               </div>
                             )}
                           </div>
@@ -447,9 +464,9 @@ const EventDetails = () => {
                           {/* Guest List Summary */}
                           <div>
                             <div className="flex justify-between items-center">
-                              <label className="block text-sm font-medium text-gray-700">Guest List</label>
+                              <label className="block text-sm font-medium text-gray-700">Lista gostiju</label>
                               <span className="text-xs text-gray-500">
-                                {guests.length} {guests.length === 1 ? "guest" : "guests"}
+                                {guests.length} {guests.length === 1 ? "gost" : "gostiju"}
                               </span>
                             </div>
                             <div className="mt-1 p-3 border border-gray-300 rounded-md">
@@ -470,7 +487,7 @@ const EventDetails = () => {
                                   className="inline-flex items-center px-3 py-1 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
                                 >
                                   <Users className="h-4 w-4 mr-1" />
-                                  Manage Guests
+                                  Upravljaj gostima
                                 </button>
                                 <button
                                   type="button"
@@ -478,7 +495,7 @@ const EventDetails = () => {
                                   className="inline-flex items-center px-3 py-1 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
                                 >
                                   <Plus className="h-4 w-4 mr-1" />
-                                  Add Guest
+                                  Dodaj gosta
                                 </button>
                               </div>
                             </div>
@@ -486,13 +503,13 @@ const EventDetails = () => {
 
                           <div>
                             <label htmlFor="special-requests" className="block text-sm font-medium text-gray-700">
-                              Special Requests
+                              Posebni zahtjevi
                             </label>
                             <textarea
                               id="special-requests"
                               rows={3}
                               className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                              placeholder="Any special requests or requirements..."
+                              placeholder="Bilo koji posebni zahtjevi ili potrebe..."
                               value={specialRequests}
                               onChange={(e) => setSpecialRequests(e.target.value)}
                             />
@@ -500,15 +517,15 @@ const EventDetails = () => {
 
                           <div className="border-t border-gray-200 pt-4">
                             <div className="flex justify-between text-sm">
-                              <span>Fixed price:</span>
+                              <span>Fiksna cijena:</span>
                               <span>{formatPrice(event.ukCijenaFiksna)}</span>
                             </div>
                             <div className="flex justify-between text-sm">
-                              <span>Per person ({guests.length} guests):</span>
+                              <span>Po osobi ({guests.length} guests):</span>
                               <span>{formatPrice((event.ukCijenaPoOsobi || 0) * guests.length)}</span>
                             </div>
                             <div className="flex justify-between font-medium text-lg mt-2 pt-2 border-t border-gray-200">
-                              <span>Total:</span>
+                              <span>Ukupno:</span>
                               <span>{formatPrice(totalPrice)}</span>
                             </div>
                           </div>
@@ -523,14 +540,14 @@ const EventDetails = () => {
                       disabled={!selectedTermin || guests.some((g) => !g.ime || !g.prezime || !g.email)}
                       className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50"
                     >
-                      Reserve
+                      Rezerviraj
                     </button>
                     <button
                       type="button"
                       onClick={() => setShowReservationModal(false)}
                       className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
                     >
-                      Cancel
+                      Odustani
                     </button>
                   </div>
                 </>
@@ -538,15 +555,15 @@ const EventDetails = () => {
                 <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                   <div className="sm:flex sm:items-start">
                     <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                      <h3 className="text-lg leading-6 font-medium text-gray-900">Reservation Successful!</h3>
+                      <h3 className="text-lg leading-6 font-medium text-gray-900">Rezervacija uspješna!</h3>
                       <div className="mt-4 space-y-4">
                         <p className="text-sm text-gray-500">
-                          Your reservation has been created successfully. Please proceed to payment to confirm your
-                          booking.
+                          Vaša rezervacija je uspješno stvorena. Molimo nastavite s plaćanjem da potvrdite svoju
+                          rezervaciju.
                         </p>
                         <div className="border-t border-gray-200 pt-4">
                           <div className="flex justify-between font-medium text-lg">
-                            <span>Total Amount:</span>
+                            <span>Ukupan iznos:</span>
                             <span>{formatPrice(totalPrice)}</span>
                           </div>
                         </div>
@@ -556,7 +573,7 @@ const EventDetails = () => {
                           className="w-full inline-flex justify-center items-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                         >
                           <CreditCard className="h-5 w-5 mr-2" />
-                          Proceed to Payment
+                          Nastavi s plaćanjem
                         </button>
                       </div>
                     </div>
@@ -584,12 +601,12 @@ const EventDetails = () => {
               <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                 <div className="sm:flex sm:items-start">
                   <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                    <h3 className="text-lg leading-6 font-medium text-gray-900">Manage Guest List</h3>
+                    <h3 className="text-lg leading-6 font-medium text-gray-900">Upravljaj listom gostiju</h3>
                     <div className="mt-4 space-y-4 max-h-96 overflow-y-auto">
                       {guests.map((guest, index) => (
                         <div key={guest.id} className="border border-gray-200 rounded-md p-3">
                           <div className="flex justify-between items-center mb-2">
-                            <span className="text-sm font-medium">Guest {index + 1}</span>
+                            <span className="text-sm font-medium">Gost {index + 1}</span>
                             <button
                               type="button"
                               onClick={() => handleRemoveGuest(guest.id)}
@@ -602,7 +619,7 @@ const EventDetails = () => {
                             <div>
                               <input
                                 type="text"
-                                placeholder="First Name"
+                                placeholder="Ime"
                                 value={guest.ime}
                                 onChange={(e) => handleGuestChange(guest.id, "ime", e.target.value)}
                                 className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
@@ -611,7 +628,7 @@ const EventDetails = () => {
                             <div>
                               <input
                                 type="text"
-                                placeholder="Last Name"
+                                placeholder="Prezime"
                                 value={guest.prezime}
                                 onChange={(e) => handleGuestChange(guest.id, "prezime", e.target.value)}
                                 className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
@@ -635,7 +652,7 @@ const EventDetails = () => {
                         className="flex items-center justify-center w-full py-2 px-4 border border-dashed border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                       >
                         <Plus className="h-4 w-4 mr-2" />
-                        Add Guest
+                        Dodaj gosta
                       </button>
                     </div>
                   </div>
@@ -647,7 +664,7 @@ const EventDetails = () => {
                   onClick={() => setShowGuestModal(false)}
                   className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm"
                 >
-                  Done
+                  Gotovo
                 </button>
               </div>
             </div>

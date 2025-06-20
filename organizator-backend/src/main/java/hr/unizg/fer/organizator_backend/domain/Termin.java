@@ -16,7 +16,7 @@ import java.util.Set;
 
 @Entity
 public class Termin {
-
+    //Termin
     @Id
     @Column(nullable = false, updatable = false)
     @SequenceGenerator(

@@ -40,6 +40,16 @@ public class DogadjajDTO {
     private String organizatorPrezime;
 
 
+    private String slikaUrl;
+
+    public String getSlikaUrl() {
+        return slikaUrl;
+    }
+
+    public void setSlikaUrl(String slikaUrl) {
+        this.slikaUrl = slikaUrl;
+    }
+
     private List<Integer> dogadjajPonudaPonudas;
 
     public Integer getDogadjajId() {

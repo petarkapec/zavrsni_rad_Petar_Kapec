@@ -62,6 +62,7 @@ public class DogadjajService {
                     dto.setUkCijenaPoOsobi(dogadjaj.getUkCijenaPoOsobi());
                     dto.setUkCijenaFiksna(dogadjaj.getUkCijenaFiksna());
                     dto.setOtkazniRok(dogadjaj.getOtkazniRok());
+                    dto.setSlikaUrl(dogadjaj.getSlikaUrl());
 
                     // Get Prostor details
                     Prostor prostor = dogadjaj.getProstor();
@@ -158,6 +159,7 @@ public class DogadjajService {
         dogadjaj.setUkCijenaPoOsobi(dogadjajDTO.getUkCijenaPoOsobi());
         dogadjaj.setUkCijenaFiksna(dogadjajDTO.getUkCijenaFiksna());
         dogadjaj.setOtkazniRok(dogadjajDTO.getOtkazniRok());
+        dogadjaj.setSlikaUrl(dogadjajDTO.getSlikaUrl());
         final Korisnik korisnik = dogadjajDTO.getKorisnik() == null ? null : korisnikRepository.findById(dogadjajDTO.getKorisnik())
                 .orElseThrow(() -> new NotFoundException("korisnik not found"));
         dogadjaj.setKorisnik(korisnik);
@@ -197,6 +199,7 @@ public class DogadjajService {
                     dto.setUkCijenaPoOsobi(dogadjaj.getUkCijenaPoOsobi());
                     dto.setUkCijenaFiksna(dogadjaj.getUkCijenaFiksna());
                     dto.setOtkazniRok(dogadjaj.getOtkazniRok());
+                    dto.setSlikaUrl(dogadjaj.getSlikaUrl());
 
                     // Get Prostor details
                     Prostor prostor = dogadjaj.getProstor();

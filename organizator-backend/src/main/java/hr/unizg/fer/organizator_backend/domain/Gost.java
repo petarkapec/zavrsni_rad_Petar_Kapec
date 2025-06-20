@@ -13,7 +13,7 @@ import jakarta.persistence.SequenceGenerator;
 
 @Entity
 public class Gost {
-
+    //Gost
     @Id
     @Column(nullable = false, updatable = false)
     @SequenceGenerator(
